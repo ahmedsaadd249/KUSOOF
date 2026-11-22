@@ -71,22 +71,28 @@ Copies only the website files into `dist/`, generates `dist/js/env.public.js`
 from the environment (or `.env`), and adds Cloudflare `_headers`. The build
 fails if a secret key is supplied as a public value.
 
-## Deployment (Cloudflare Pages)
+## Deployment (Cloudflare Workers — static assets)
 
-The repository is connected to Cloudflare Pages; every push to `main` builds
-and deploys automatically.
+Live: **https://kusoof.evascarf.workers.dev**
 
-| Setting | Value |
+The repository is connected to the Cloudflare Worker `kusoof` (Workers
+Builds); every push to `main` builds and deploys automatically. `wrangler.jsonc`
+tells Cloudflare to serve only `dist/` — never the docs, scripts or database
+files.
+
+| Setting (Worker › Settings › Build) | Value |
 |---|---|
-| Framework preset | None |
+| Git repository / branch | `ahmedsaadd249/KUSOOF` · `main` |
 | Build command | `node scripts/build.mjs` |
-| Build output directory | `dist` |
-| Production branch | `main` |
-| Environment variables | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL`, `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID`, `NODE_VERSION=22` |
+| Deploy command | `npx wrangler deploy` |
+| Build variables | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL` (+ `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID` when you have them) |
 
-- **Logs:** Cloudflare dashboard › Workers & Pages › your project › Deployments › a deployment › *View details*.
-- **Roll back:** Deployments › the previous good deployment › ⋯ › *Rollback to this deployment*.
-- **Preview deployments:** pushes to other branches get their own preview URL.
+Only public values go in the build variables. Never add Brevo keys, the
+service role key or access tokens.
+
+- **Logs:** Cloudflare dashboard › Workers & Pages › `kusoof` › Deployments (or Builds) › a build › *View build log*.
+- **Roll back:** Deployments › the previous good version › ⋯ › *Deploy* / *Rollback to this version*.
+- **Other branches:** pushes to other branches can produce preview versions (Settings › Build › Non-production branch builds).
 
 When the production URL changes (e.g. a custom domain), also update the
 Supabase Auth Site URL / redirect URLs, the `APP_URL` Edge Function secret and

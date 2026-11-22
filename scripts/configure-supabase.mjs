@@ -104,7 +104,8 @@ if (doAuth) await step('Auth settings updated', () => api('PATCH', '/config/auth
     smtp_pass: env.BREVO_SMTP_KEY,
     smtp_max_frequency: 60,
     site_url: appUrl,
-    uri_allow_list: appUrl,
+    // the live site plus local development
+    uri_allow_list: [...new Set([appUrl, 'http://localhost:5173'])].join(','),
     mailer_subjects_confirmation: subject,
     mailer_templates_confirmation_content: template,
     mailer_subjects_magic_link: subject,
