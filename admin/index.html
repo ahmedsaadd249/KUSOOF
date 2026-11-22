@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+    // Before paint: no stored admin session → show the sign-in screen, never the dashboard.
+    // (The app then confirms the session and admin rights with Supabase.)
+    (function () {
+      var ok = false;
+      try {
+        var s = JSON.parse(localStorage.getItem('kusoof-admin-auth'));
+        ok = !!(s && s.refresh_token);
+      } catch (e) {}
+      if (!ok) document.documentElement.classList.add('admin-locked');
+    })();
+  </script>
+  <title>Dashboard — KUSOOF Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#0E0E0E" />
+  <link rel="icon" type="image/png" href="../logo/kusoof-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="../css/base.css?v=9" />
+  <link rel="stylesheet" href="../css/shop.css?v=9" />
+  <link rel="stylesheet" href="../css/auth.css?v=10" />
+  <link rel="stylesheet" href="../css/admin.css?v=10" />
+</head>
+<body class="admin">
+  <div class="admin-intro" aria-hidden="true"><img src="../logo/kusoof-icon.png" alt="" /><span class="admin-intro__dot"></span></div>
+  <div class="admin-canvas" aria-hidden="true"></div>
+
+  <!-- Sign-in: admin email + one-time code (Supabase Auth; admin allowlist checked server-side) -->
+  <main class="admin-login" id="admin-login"></main>
+
+  <div class="admin-frame">
+    <aside class="rail"></aside>
+    <main class="admin-main" id="main">
+      <header class="admin-top"></header>
+      <div class="admin-view" id="view">
+        <div class="skel-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script type="module" src="../js/admin/app.js?v=9"></script>
+</body>
+</html>

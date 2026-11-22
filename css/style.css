@@ -1,0 +1,436 @@
+/* ==========================================================================
+   KUSOOF — landing page (scroll-driven assembly)
+   Shared tokens, header, buttons, bag and footer live in base.css
+   ========================================================================== */
+
+:root {
+  --band-h: 30svh;          /* text band under the product (landscape) */
+  --band-pb: 84px;          /* room for progress + hint under the text */
+}
+
+html.is-loading { overflow: hidden; }
+
+/* ---------- Loader ---------- */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+.loader__inner { width: min(220px, 60vw); }
+.loader__logo { width: 100%; }
+.loader__bar {
+  position: relative;
+  height: 1px;
+  margin-top: 30px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+.loader__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.loader__meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-60);
+}
+.loader__count { font-variant-numeric: tabular-nums; color: var(--ink); }
+
+/* ---------- Pinned sequence ---------- */
+.sequence {
+  position: relative;
+  height: 500vh;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.stage__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Safe rectangle the frame is contain-fitted into (read by JS) */
+.stage__box {
+  position: absolute;
+  top: var(--header-h);
+  bottom: var(--band-h);
+  left: var(--gutter);
+  right: var(--gutter);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* ---------- Callouts (stage 1) ---------- */
+.callouts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.callout {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform, opacity;
+}
+.callout__dot {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink-35);
+}
+.callout__line {
+  position: absolute;
+  left: -0.5px;
+  width: 1px;
+  height: clamp(28px, 4.4svh, 48px);
+  background: var(--ink-35);
+}
+.callout__label {
+  position: absolute;
+  left: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 2px 6px;
+  background: var(--bg);
+}
+.callout--up .callout__line { bottom: 8px; transform-origin: bottom center; }
+.callout--up .callout__label { bottom: calc(clamp(28px, 4.4svh, 48px) + 12px); }
+.callout--down .callout__line { top: 8px; transform-origin: top center; }
+.callout--down .callout__label { top: calc(clamp(28px, 4.4svh, 48px) + 12px); }
+
+/* ---------- Chapters ---------- */
+.chapters {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--band-h);
+  pointer-events: none;
+}
+
+.chapter {
+  position: absolute;
+  inset: 0 var(--gutter) var(--band-pb);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 25rem);
+  column-gap: 6vw;
+  align-items: end;
+}
+
+.chapter__index {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: clamp(10px, 2svh, 20px);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.chapter__index span:last-child { color: var(--ink-35); }
+.chapter__index i {
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: var(--silver);
+}
+
+.chapter__title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.1rem, min(5.2vw, 7.6svh), 5.8rem);
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+}
+.chapter__title .line { display: block; }
+.chapter__title em { font-weight: 300; }
+
+.chapter__body {
+  padding-bottom: 0.5em;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-60);
+}
+.chapter__body p { max-width: 34ch; }
+
+.chapter__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 18px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.chapter__specs li { display: inline-flex; align-items: center; gap: 18px; }
+.chapter__specs li + li::before {
+  content: "";
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--steel-3);
+  margin-inline-start: -18px;
+  transform: translateX(calc(-7.5px * var(--dir)));
+}
+.chapter__specs--mobile { display: none; }
+
+/* ---------- Progress + hint ---------- */
+.progress {
+  position: absolute;
+  inset-inline-end: var(--gutter);
+  bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  pointer-events: none;
+}
+.progress__num--total { color: var(--ink-35); }
+.progress__track { display: flex; gap: 6px; }
+.progress__seg {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 1px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+.progress__seg b {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.hint {
+  position: absolute;
+  inset-inline-start: var(--gutter);
+  bottom: 26px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 14px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-60);
+  pointer-events: none;
+  transition: opacity 0.6s var(--ease-out);
+}
+.hint.is-hidden { opacity: 0 !important; }
+.hint__line {
+  position: relative;
+  width: 1px;
+  height: 22px;
+  background: var(--hairline);
+  overflow: hidden;
+}
+.hint__line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 40%;
+  background: var(--ink);
+  animation: hint-drop 2.2s var(--ease-out) infinite;
+}
+@keyframes hint-drop {
+  0%   { transform: translateY(-100%); }
+  70%  { transform: translateY(250%); }
+  100% { transform: translateY(250%); }
+}
+
+/* ---------- Product ---------- */
+.product {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(96px, 16svh, 180px) var(--gutter) clamp(88px, 14svh, 160px);
+  text-align: center;
+  background: var(--bg);
+}
+.product__figure {
+  width: min(1080px, 100%);
+  aspect-ratio: 1672 / 941;
+}
+.product__image { width: 100%; height: 100%; object-fit: contain; }
+
+.product__copy {
+  max-width: 36rem;
+  margin-top: clamp(24px, 4svh, 48px);
+}
+.product__title {
+  margin: 0.45em 0 0.4em;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(2.3rem, 4.6vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.product__desc {
+  max-width: 31rem;
+  margin: 0 auto;
+  font-size: 15.5px;
+  line-height: 1.75;
+  color: var(--ink-60);
+}
+
+/* ==========================================================================
+   Portrait / phones: product in the upper half, text centred below
+   ========================================================================== */
+@media (orientation: portrait) {
+  :root {
+    --band-h: 46svh;
+    --band-pb: 112px;
+  }
+
+  .stage__box {
+    top: var(--header-h);
+    bottom: var(--band-h);
+  }
+
+  .callouts { display: none; }
+
+  .chapter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    text-align: center;
+  }
+  .chapter__head { display: flex; flex-direction: column; align-items: center; }
+  .chapter__title { font-size: clamp(2.2rem, 10.4vw, 4.2rem); }
+  .chapter__body { padding-bottom: 0; font-size: 14.5px; line-height: 1.65; }
+  .chapter__body p { margin: 0 auto; max-width: 32ch; }
+  .chapter__specs { justify-content: center; margin-top: 14px; }
+  .chapter__specs--mobile { display: flex; }
+
+  .progress {
+    inset-inline: auto;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+  }
+  .hint {
+    inset-inline: auto;
+    left: 50%;
+    bottom: calc(52px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* Short phones in portrait: tighten the text band */
+@media (orientation: portrait) and (max-height: 700px) {
+  :root { --band-h: 50svh; --band-pb: 96px; }
+  .chapter { gap: 10px; }
+  .chapter__index { margin-bottom: 8px; }
+  .chapter__body { font-size: 13.5px; line-height: 1.6; }
+  .hint__label { display: none; }
+}
+
+/* Phones in landscape: text left, product right */
+@media (orientation: landscape) and (max-height: 540px) {
+  :root { --header-h: 56px; }
+  .stage__box {
+    top: var(--header-h);
+    bottom: 12px;
+    inset-inline-start: 42vw;
+    inset-inline-end: var(--gutter);
+  }
+  .callouts { display: none; }
+  .chapters { top: var(--header-h); bottom: 0; height: auto; width: 42vw; inset-inline-start: 0; inset-inline-end: auto; }
+  .chapter {
+    inset: 0 0 52px;
+    inset-inline-start: var(--gutter);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    text-align: left;
+  }
+  .chapter__index { margin-bottom: 8px; }
+  .chapter__title { font-size: clamp(1.5rem, 8.4svh, 2.6rem); }
+  .chapter__body { font-size: 12.5px; line-height: 1.55; padding: 0; }
+  .chapter__specs { margin-top: 8px; }
+  .progress { inset-inline: var(--gutter) auto; bottom: 18px; transform: none; }
+  .hint { display: none; }
+}
+
+/* Very short landscape viewports: headline only */
+@media (orientation: landscape) and (max-height: 420px) {
+  .chapter__body { display: none; }
+}
+
+/* Mid-height landscape (small laptops): give the headline a little more room */
+@media (orientation: landscape) and (min-height: 541px) and (max-height: 780px) {
+  :root { --band-h: 31svh; --band-pb: 72px; }
+  .progress { bottom: 24px; }
+  .hint { bottom: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint__line::after { animation: none; }
+}
+
+/* ==========================================================================
+   Arabic typography on the landing (Amiri / IBM Plex Sans Arabic)
+   ========================================================================== */
+:root[lang="ar"] .chapter__title { font-weight: 400; line-height: 1.3; font-size: clamp(2rem, min(4.6vw, 6.6svh), 5rem); }
+:root[lang="ar"] .chapter__body { font-size: 16px; line-height: 1.85; }
+:root[lang="ar"] .chapter__specs,
+:root[lang="ar"] .callout__label,
+:root[lang="ar"] .hint,
+:root[lang="ar"] .loader__meta { font-size: 13px; }
+:root[lang="ar"] .product__title { font-weight: 400; line-height: 1.35; }
+:root[lang="ar"] .product__desc { font-size: 16.5px; line-height: 1.9; }
+@media (orientation: portrait) {
+  :root[lang="ar"] .chapter__title { font-size: clamp(2rem, 9vw, 3.6rem); }
+  :root[lang="ar"] .chapter__body { font-size: 15px; line-height: 1.8; }
+}

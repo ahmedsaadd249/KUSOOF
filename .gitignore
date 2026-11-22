@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------------------
+# Secrets — never commit (see .env.example for the variable names)
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+.dev.vars
+*.pem
+*.key
+*.p12
+*.pfx
+service-account*.json
+
+# Generated from environment variables by scripts/build.mjs / write-env.mjs
+js/env.public.js
+
+# Build output (Cloudflare Pages builds it from source)
+dist/
+
+# Local-only material (design references, source footage) — not part of the site
+videos/
+glasses photos/
+
+# Tooling
+node_modules/
+.wrangler/
+supabase/.temp/
+supabase/.branches/
+.DS_Store
+Thumbs.db

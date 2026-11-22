@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <script>
+    (function () {
+      var h = document.documentElement, q = null, s = null, l;
+      try { q = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+      try { s = localStorage.getItem('kusoof.locale'); } catch (e) {}
+      l = q === 'ar' || q === 'en' ? q : s === 'ar' || s === 'en' ? s : ((navigator.language || '').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en');
+      if (q) { try { localStorage.setItem('kusoof.locale', l); } catch (e) {} }
+      h.lang = l; h.dir = l === 'ar' ? 'rtl' : 'ltr';
+      if (l === 'ar') h.classList.add('i18n-pending');
+    })();
+  </script>
+  <title>Checkout — KUSOOF</title>
+  <meta name="description" content="Complete your KUSOOF order." />
+  <meta name="theme-color" content="#FEFEFE" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="logo/kusoof-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@400;500;600&family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="css/base.css?v=9" />
+  <link rel="stylesheet" href="css/shop.css?v=9" />
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
+  <header class="site-header"></header>
+
+  <main id="main" class="shop" tabindex="-1">
+    <header class="shop__head">
+      <div>
+        <p class="eyebrow" data-i18n="checkout.eyebrow">Secure checkout</p>
+        <h1 class="shop__title display" data-i18n-html="checkout.title">Checkout</h1>
+      </div>
+      <a class="caps text-link" href="cart.html" data-i18n="checkout.edit">Edit cart</a>
+    </header>
+
+    <div id="checkout-root" aria-busy="true"><div class="skeleton" style="height: 420px"></div></div>
+  </main>
+
+  <template id="checkout-template">
+    <div class="shop__grid">
+      <form class="checkout-form" id="checkout-form" novalidate>
+        <p class="form-summary" role="alert" hidden></p>
+
+        <!-- 01 Customer -->
+        <section class="co-section" aria-labelledby="sec-customer">
+          <div class="co-section__head"><span class="co-section__num">01</span><h2 class="co-section__title" id="sec-customer" data-i18n="checkout.customer"></h2></div>
+          <div class="form-grid">
+            <div class="field span-2">
+              <label class="field__label" for="co-name"><span data-i18n="checkout.fullName"></span></label>
+              <input class="input" id="co-name" name="fullName" type="text" autocomplete="name" aria-describedby="fullName-error" />
+              <p class="field__error" id="fullName-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-email"><span data-i18n="checkout.email"></span></label>
+              <div class="verified-field">
+                <input class="input" id="co-email" type="email" readonly dir="ltr" />
+                <span class="badge badge--ok" data-i18n="common.verified"></span>
+              </div>
+              <button class="co-signout" type="button" data-signout data-i18n="checkout.notYou"></button>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-phone"><span data-i18n="checkout.phone"></span></label>
+              <div class="field__control">
+                <span class="field__prefix" aria-hidden="true">+20</span>
+                <input class="input input--prefixed" id="co-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" dir="ltr" aria-describedby="phone-hint phone-error" />
+              </div>
+              <p class="field__hint" id="phone-hint" data-i18n="checkout.phoneHint"></p>
+              <p class="field__error" id="phone-error" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 02 Delivery address -->
+        <section class="co-section" aria-labelledby="sec-delivery">
+          <div class="co-section__head"><span class="co-section__num">02</span><h2 class="co-section__title" id="sec-delivery" data-i18n="checkout.delivery"></h2></div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="co-country"><span data-i18n="checkout.country"></span></label>
+              <select class="select" id="co-country" name="country" autocomplete="country" aria-describedby="country-error">
+                <option value="EG" data-i18n="checkout.countryEG"></option>
+              </select>
+              <p class="field__error" id="country-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-governorate"><span data-i18n="checkout.governorate"></span></label>
+              <select class="select" id="co-governorate" name="governorate" autocomplete="address-level1" aria-describedby="governorate-error">
+                <option value="" data-i18n="checkout.governoratePlaceholder"></option>
+              </select>
+              <p class="field__error" id="governorate-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-zone"><span data-i18n="checkout.area"></span></label>
+              <select class="select" id="co-zone" name="zone" aria-describedby="zone-hint zone-error" disabled>
+                <option value="" data-i18n="checkout.areaPlaceholder"></option>
+              </select>
+              <p class="field__hint" id="zone-hint" data-i18n="checkout.areaHint"></p>
+              <p class="field__error" id="zone-error" hidden></p>
+            </div>
+            <div class="field span-2" id="area-other-field" hidden>
+              <label class="field__label" for="co-area"><span data-i18n="checkout.areaOtherLabel"></span></label>
+              <input class="input" id="co-area" name="area" type="text" autocomplete="address-level3" aria-describedby="area-error" />
+              <p class="field__error" id="area-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-street"><span data-i18n="checkout.street"></span></label>
+              <input class="input" id="co-street" name="street" type="text" autocomplete="address-line1" aria-describedby="street-error" />
+              <p class="field__error" id="street-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-building"><span data-i18n="checkout.building"></span></label>
+              <input class="input" id="co-building" name="building" type="text" autocomplete="address-line2" aria-describedby="building-error" />
+              <p class="field__error" id="building-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="co-apartment"><span data-i18n="checkout.apartment"></span></label>
+              <input class="input" id="co-apartment" name="apartment" type="text" aria-describedby="apartment-error" />
+              <p class="field__error" id="apartment-error" hidden></p>
+            </div>
+            <div class="field span-2">
+              <label class="field__label" for="co-instructions"><span data-i18n="checkout.instructions"></span> <small data-i18n="common.optional"></small></label>
+              <textarea class="textarea" id="co-instructions" name="instructions" rows="3" data-i18n-attr="placeholder:checkout.instructionsPh"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- 03 Map -->
+        <section class="co-section" aria-labelledby="sec-location">
+          <div class="co-section__head"><span class="co-section__num">03</span><h2 class="co-section__title" id="sec-location" data-i18n="checkout.location"></h2></div>
+          <div class="field" id="pin-field">
+            <div id="map"></div>
+            <div class="map-readout" id="map-readout" aria-live="polite"></div>
+            <p class="field__error" id="pin-error" hidden></p>
+          </div>
+        </section>
+
+        <!-- 04 Payment -->
+        <section class="co-section" aria-labelledby="sec-payment">
+          <div class="co-section__head"><span class="co-section__num">04</span><h2 class="co-section__title" id="sec-payment" data-i18n="checkout.payment"></h2></div>
+          <div class="co-payment"><span class="co-payment__radio" aria-hidden="true"></span><div><strong data-i18n="payment.cod"></strong><small data-i18n="checkout.paymentNote"></small></div></div>
+        </section>
+      </form>
+
+      <aside class="summary" aria-labelledby="co-summary-title">
+        <h2 class="summary__title" id="co-summary-title" data-i18n="checkout.summary"></h2>
+        <div data-summary-items></div>
+        <div data-summary-totals></div>
+        <div class="summary__actions">
+          <button class="btn btn--solid btn--block" type="submit" form="checkout-form"><span class="btn__label" data-i18n="checkout.place"></span></button>
+        </div>
+        <p class="summary__note" data-i18n="checkout.paymentNote"></p>
+      </aside>
+    </div>
+  </template>
+
+  <footer class="site-footer"></footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script type="module" src="js/pages/checkout.js?v=9"></script>
+</body>
+</html>

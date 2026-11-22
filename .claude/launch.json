@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kusoof-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-c",
+        "import http.server as h\nclass H(h.SimpleHTTPRequestHandler):\n    def end_headers(self):\n        self.send_header('Cache-Control', 'no-cache')\n        super().end_headers()\nh.ThreadingHTTPServer.request_queue_size = 256\nh.test(HandlerClass=H, ServerClass=h.ThreadingHTTPServer, port=5173, bind='127.0.0.1')"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "kusoof-dist",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5174", "--bind", "127.0.0.1", "--directory", "dist"],
+      "port": 5174
+    }
+  ]
+}
