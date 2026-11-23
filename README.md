@@ -75,25 +75,22 @@ fails if a secret key is supplied as a public value.
 
 Live: **https://kusoof.pages.dev**
 
-The repository is connected to the Cloudflare Pages project ; every
-push to  builds and deploys automatically. Only  is published —
-never the docs, scripts, database files or .
+The repository is connected to the Cloudflare Pages project `kusoof`; every
+push to `main` builds and deploys automatically. Only `dist/` is published —
+never the docs, scripts, database files or `.env`.
 
 | Setting (Pages › kusoof › Settings › Build) | Value |
 |---|---|
-| Git repository / production branch |  ·  |
+| Git repository / production branch | `ahmedsaadd249/KUSOOF` · `main` |
 | Framework preset | None |
-| Build command | ✓ Built dist/ — 299 files, 12.9 MB
-  Supabase:    https://qelbprljqgsrmicvdqet.supabase.co
-  App URL:     http://localhost:5173
-  Google Maps: not set — the map shows its setup message |
-| Build output directory |  |
-| Environment variables | , , ,  (+ ,  when you have them) |
+| Build command | `node scripts/build.mjs` |
+| Build output directory | `dist` |
+| Environment variables | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL`, `NODE_VERSION=22` (+ `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID` when you have them) |
 
 Only public values go in the environment variables. Never add Brevo keys, the
 service role key or access tokens.
 
-- **Logs:** Cloudflare dashboard › Workers & Pages ›  › Deployments › a deployment › *View details*.
+- **Logs:** Cloudflare dashboard › Workers & Pages › `kusoof` › Deployments › a deployment › *View details*.
 - **Roll back:** Deployments › the previous good deployment › ⋯ › *Rollback to this deployment*.
 - **Preview deployments:** pushes to other branches get their own preview URL.
 
