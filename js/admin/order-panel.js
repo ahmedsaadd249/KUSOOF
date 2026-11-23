@@ -67,6 +67,22 @@ export async function openOrderPanel(id, { onChange } = {}) {
         }
       </section>
 
+      <section class="o-section">
+        <h3>Items</h3>
+        <div class="o-items">
+          ${o.items
+            .map(
+              (i) => `<div class="o-item">${i.image ? `<img src="${esc(asset(i.image))}" alt="" />` : '<span></span>'}<div><div style="font-weight:500">${esc(i.name.en)}</div><div class="who__email">${esc(money(i.price))} × ${i.qty}</div></div><div style="font-weight:600">${esc(money(i.price * i.qty))}</div></div>`
+            )
+            .join('')}
+        </div>
+        <div class="o-totals">
+          <div><span>Subtotal</span><span>${esc(money(o.subtotal))}</span></div>
+          <div><span>Delivery</span><span>${esc(money(o.deliveryFee))}</span></div>
+          <div class="total"><span>Total</span><span>${esc(money(o.total))}</span></div>
+        </div>
+      </section>
+
       <section class="o-section o-deliver">
         <h3>Deliver to</h3>
         <p class="o-deliver__name">${esc(o.customer.name)}</p>
@@ -97,22 +113,6 @@ export async function openOrderPanel(id, { onChange } = {}) {
             .map((h) => `<li><i aria-hidden="true"></i><div>${statusBadge(h.status)}<small>${esc(dateTime(h.at, 'en'))}${h.note ? ` · ${esc(h.note)}` : ''}</small></div></li>`)
             .join('')}
         </ol>
-      </section>
-
-      <section class="o-section">
-        <h3>Items</h3>
-        <div class="o-items">
-          ${o.items
-            .map(
-              (i) => `<div class="o-item">${i.image ? `<img src="${esc(asset(i.image))}" alt="" />` : '<span></span>'}<div><div style="font-weight:500">${esc(i.name.en)}</div><div class="who__email">${esc(money(i.price))} × ${i.qty}</div></div><div style="font-weight:600">${esc(money(i.price * i.qty))}</div></div>`
-            )
-            .join('')}
-        </div>
-        <div class="o-totals">
-          <div><span>Subtotal</span><span>${esc(money(o.subtotal))}</span></div>
-          <div><span>Delivery</span><span>${esc(money(o.deliveryFee))}</span></div>
-          <div class="total"><span>Total</span><span>${esc(money(o.total))}</span></div>
-        </div>
       </section>
 
       <section class="o-section">
