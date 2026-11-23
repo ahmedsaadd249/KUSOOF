@@ -102,6 +102,7 @@ async function render(admin: any, job: Row, settings: Row | null) {
       total: Number(order.total_amount),
       address: addressLine(order, locale),
       orderUrl: APP_URL ? `${APP_URL}/order-confirmation.html?order=${encodeURIComponent(order.order_number)}&lang=${locale}` : '',
+      rateUrl: APP_URL && order.rating_token ? `${APP_URL}/rate.html?t=${order.rating_token}&lang=${locale}` : '',
       currency: {
         code: settings?.currency_code ?? 'EGP',
         display: settings?.currency_display ?? 'code',

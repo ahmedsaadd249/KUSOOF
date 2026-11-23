@@ -29,6 +29,7 @@ function sampleData(locale) {
     total: 16875,
     orderUrl: '#',
     shopUrl: '#',
+    rateUrl: '#',
     currency: settingsSync().currency,
   };
 }

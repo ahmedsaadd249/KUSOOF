@@ -19,7 +19,7 @@ export class ServiceError extends Error {
 const KNOWN = new Set([
   'not_authenticated', 'validation', 'delivery_disabled', 'invalid_zone', 'outside_egypt', 'empty_cart',
   'product_unavailable', 'insufficient_stock', 'forbidden', 'not_found', 'invalid_transition',
-  'not_retryable', 'zone_in_use',
+  'not_retryable', 'zone_in_use', 'not_delivered', 'invalid_rating',
 ]);
 
 /** Turn a supabase-js / PostgREST error into a ServiceError. */

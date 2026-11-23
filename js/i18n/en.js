@@ -3,6 +3,7 @@
    Strings with <em> are only ever inserted as trusted HTML (see th() in core/i18n.js). */
 export default {
   meta: {
+    rateTitle: 'Rate your order — KUSOOF',
     homeTitle: 'KUSOOF — Every Detail Has a Purpose',
     homeDesc: 'KUSOOF Optical in gloss black. Watch every lens, hinge and temple arm come together, then explore the collection.',
     productsTitle: 'Products — KUSOOF',
@@ -304,6 +305,39 @@ export default {
     addApartment: 'Add your apartment number.',
   },
 
+  rate: {
+    title: 'How was your order, <em>{name}</em>?',
+    sub: 'Rate your order',
+    subChange: 'You already rated this order — you can change it.',
+    legend: 'Your rating',
+    pick: 'Tap a star',
+    star1: 'Poor',
+    star2: 'Fair',
+    star3: 'Good',
+    star4: 'Very good',
+    star5: 'Excellent',
+    starsOf: '{n} of 5 stars',
+    comment: 'Tell us more',
+    commentPh: 'What did you like? What could be better?',
+    publicNote: 'Your rating, comment and first name with your last initial may appear on the product page.',
+    submit: 'Send rating',
+    update: 'Update rating',
+    thanksTitle: 'Thank you!',
+    thanksBody: 'Your rating helps us and helps other customers choose.',
+    shop: 'Explore the collection',
+    invalidTitle: 'This link doesn’t work',
+    invalidBody: 'Use the stars in the “Delivered” email we sent you, or contact us and we’ll help.',
+    notYetTitle: 'Not delivered yet',
+    notYetBody: 'You can rate order {number} once it has been delivered.',
+  },
+  reviews: {
+    title: 'Customer <em>reviews</em>',
+    none: 'No reviews yet. Customers can rate their order once it’s delivered.',
+    count: '{n} reviews',
+    countOne: '1 review',
+    outOf: '{avg} out of 5',
+    verified: 'Verified purchase',
+  },
   confirm: {
     eyebrow: 'Order confirmed',
     title: 'Thank you, <em>{name}</em>',

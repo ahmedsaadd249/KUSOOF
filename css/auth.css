@@ -384,3 +384,25 @@
   .otp__box { height: 54px; border-radius: 14px; font-size: 22px; }
   .otp__boxes.is-grid { gap: 20px 26px; }
 }
+
+/* ---------- Rate an order (rate.html) ---------- */
+.rate .glass-card__icon svg { color: var(--ink); }
+.rate__order { font-weight: 600; color: var(--ink); }
+.rate__items { display: grid; gap: 8px; margin-top: 18px; text-align: start; }
+.rate__items li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(14, 14, 14, 0.06); font-size: 14px; }
+.rate__items img { width: 64px; height: 36px; object-fit: contain; flex: none; }
+.rate__form { display: flex; flex-direction: column; gap: 18px; margin-top: 22px; }
+.rate__stars-wrap { border: 0; padding: 0; margin: 0; }
+.rate { min-width: 0; }
+.rate__stars { display: flex; justify-content: center; gap: clamp(2px, 1.2vw, 6px); }
+.rate__star { display: grid; place-items: center; width: clamp(38px, 12vw, 48px); height: clamp(38px, 12vw, 48px); border-radius: 12px; cursor: pointer; color: #D7D4CF; transition: color 0.2s, transform 0.2s; }
+.rate__star svg { width: 72%; height: 72%; fill: currentColor; }
+.rate__star.is-on { color: #E0A526; }
+.rate__star:hover { transform: translateY(-2px); }
+.rate__radio:focus-visible + .rate__star { outline: 2px solid var(--ink); outline-offset: 2px; }
+.rate__stars--done { margin-bottom: 10px; }
+.rate__stars--done .rate__star { cursor: default; width: 36px; height: 36px; }
+.rate__star-label { margin-top: 6px; min-height: 1.4em; font-size: 13.5px; color: var(--ink-60); }
+.rate .field__label small { color: var(--ink-60); font-weight: 400; }
+.rate__cta { margin-top: 22px; }
+@media (prefers-reduced-motion: reduce) { .rate__star { transition: none; } .rate__star:hover { transform: none; } }

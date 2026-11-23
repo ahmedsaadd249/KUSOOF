@@ -68,7 +68,7 @@ for (const k of PUBLIC) if (config[k] && secrets.includes(config[k])) fail(`${k}
 for (const k of PUBLIC) if (/^(xkeysib-|xsmtpsib-|sbp_)/.test(config[k])) fail(`${k} looks like a Brevo key or access token.`);
 
 /* ---------- copy the website ---------- */
-const SITE_FILES = ['index.html', 'products.html', 'product.html', 'cart.html', 'checkout.html', 'account.html', 'verify.html', 'order-confirmation.html'];
+const SITE_FILES = ['index.html', 'products.html', 'product.html', 'cart.html', 'checkout.html', 'account.html', 'verify.html', 'order-confirmation.html', 'rate.html'];
 const SITE_DIRS = ['css', 'js', 'frames', 'products', 'logo', 'admin'];
 
 rmSync(out, { recursive: true, force: true });

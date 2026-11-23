@@ -4,6 +4,7 @@ import { esc, el } from '../core/dom.js';
 import { dateTime, phone, number } from '../core/format.js';
 import { openPanel, toast } from '../core/ui.js';
 import { getOrder, updateOrderStatus } from '../services/orders.js';
+import { getOrderRating, setRatingPublished } from '../services/ratings.js';
 import { settingsSync } from '../services/settings.js';
 import { createMapPicker } from '../components/map-picker.js';
 import { NEXT_STATUSES } from '../config.js';
@@ -41,6 +42,39 @@ export async function openOrderPanel(id, { onChange } = {}) {
   const footer = el(`<div style="display:flex;gap:10px;width:100%;justify-content:flex-end"><button class="btn btn--outline btn--sm" type="button" data-close-panel>Close</button></div>`);
   const panel = openPanel({ title: order.id, subtitle: `Placed ${dateTime(order.createdAt, 'en')}`, body, footer, width: 620 });
   footer.querySelector('[data-close-panel]').addEventListener('click', panel.close);
+
+  /* The customer's rating (from the "Delivered" email) + show / hide on the product pages */
+  async function paintRating(o) {
+    const box = body.querySelector('[data-rating]');
+    let r = null;
+    try {
+      r = await getOrderRating(o.uuid);
+    } catch (err) {
+      box.innerHTML = '<p class="o-note">Could not load the rating.</p>';
+      return;
+    }
+    if (!r) {
+      box.innerHTML = '<p class="o-note">Not rated yet. The “Delivered” email asks the customer to rate it.</p>';
+      return;
+    }
+    const stars = [1, 2, 3, 4, 5].map((n) => `<span style="color:${n <= r.rating ? '#E0A526' : '#D7D4CF'};font-size:20px">★</span>`).join('');
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span aria-label="${r.rating} of 5 stars" role="img">${stars}</span><b>${r.rating}/5</b><small class="muted">${esc(dateTime(r.at, 'en'))}</small></div>
+      ${r.comment ? `<p style="margin-top:8px;white-space:pre-line" dir="auto" lang="${esc(r.locale)}">“${esc(r.comment)}”</p>` : '<p class="o-note" style="margin-top:6px">No comment.</p>'}
+      <div class="toggle-row" style="margin-top:12px"><div>Show on the product page<small>${r.published ? 'Visible to everyone as a review.' : 'Hidden — only you can see it.'}</small></div>
+        <label class="switch"><input type="checkbox" data-publish ${r.published ? 'checked' : ''} aria-label="Show this rating on the product page" /><span class="switch__track"></span></label></div>`;
+    box.querySelector('[data-publish]').addEventListener('change', async (e) => {
+      const on = e.currentTarget.checked;
+      try {
+        await setRatingPublished(o.uuid, on);
+        toast(on ? 'Rating shown on the product page' : 'Rating hidden from the product page');
+        paintRating(o);
+      } catch (err) {
+        e.currentTarget.checked = !on;
+        toast('Could not update the rating', { tone: 'error' });
+      }
+    });
+  }
 
   function render(o) {
     const a = o.address;
@@ -104,6 +138,11 @@ export async function openOrderPanel(id, { onChange } = {}) {
         </dl>
       </section>
 
+      <section class="o-section" data-rating-section>
+        <h3>Customer rating</h3>
+        <div data-rating><p class="o-note">${o.status === 'delivered' ? 'Loading…' : 'The customer can rate the order from the “Delivered” email once it’s delivered.'}</p></div>
+      </section>
+
       <section class="o-section">
         <h3>Timeline</h3>
         <ol class="timeline">
@@ -131,6 +170,8 @@ export async function openOrderPanel(id, { onChange } = {}) {
       </section>`;
 
     createMapPicker(body.querySelector('[data-map]'), { pin: a.lat != null ? { lat: a.lat, lng: a.lng } : null, readonly: true });
+
+    if (o.status === 'delivered') paintRating(o);
 
     body.querySelector('[data-copy-address]').addEventListener('click', async () => {
       const text = [o.customer.name, phone(o.customer.phone), addressLine(a), a.instructions ? `Instructions: ${a.instructions}` : '', mapsUrl(a)]

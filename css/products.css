@@ -511,3 +511,21 @@
 .lightbox__bar .icon-btn { border: 1px solid var(--hairline); }
 .lightbox__caption { min-width: 180px; text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-60); }
 :root[lang="ar"] .lightbox__caption { font-size: 13.5px; }
+
+/* Customer reviews */
+.reviews__summary { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 15px; color: var(--ink-70); }
+.reviews__empty { max-width: 46ch; color: var(--ink-60); }
+.reviews__list { display: grid; gap: 14px; max-width: 760px; margin: 0 auto; }
+.review { padding: 20px 22px; border: 1px solid var(--hairline); border-radius: 18px; background: var(--surface); }
+.review__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13.5px; }
+.review__name { font-weight: 600; }
+.review__badge { padding: 2px 9px; border-radius: 999px; background: #EEF6F1; color: #0E6A47; font-size: 12px; }
+.review__date { margin-inline-start: auto; color: var(--ink-60); }
+.review__text { margin-top: 10px; font-size: 15px; line-height: 1.65; white-space: pre-line; }
+/* Stars: a grey star with a gold copy clipped to --fill */
+.stars { display: inline-flex; gap: 2px; vertical-align: middle; }
+.stars__one { position: relative; width: 16px; height: 16px; }
+.stars__one svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: #D7D4CF; }
+.stars__one svg + svg { fill: #E0A526; clip-path: inset(0 calc(100% - var(--fill)) 0 0); }
+:root[dir="rtl"] .stars__one svg + svg { clip-path: inset(0 0 0 calc(100% - var(--fill))); }
+.stars--lg .stars__one { width: 26px; height: 26px; }

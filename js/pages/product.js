@@ -1,7 +1,8 @@
 /* Product details page (product.html?id=sunglasses | optical). */
 import { t, loc, locale, esc } from '../core/i18n.js';
 import { $, $$, param, reduceMotion } from '../core/dom.js';
-import { money } from '../core/format.js';
+import { money, date, number } from '../core/format.js';
+import { productReviews } from '../services/ratings.js';
 import { getProduct, listProducts, stockState } from '../services/products.js';
 import { MAX_QTY } from '../services/cart.js';
 import { cardHTML, imgHTML, stockBadge } from '../components/product-card.js';
@@ -14,6 +15,36 @@ initPage({ page: 'products' });
 const mount = $('#pdp');
 const crumb = $('[data-crumb]');
 const SIZES = '(min-width: 960px) 54vw, 92vw';
+
+const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+/** 4.6 → five stars, the last one 60% filled */
+const starsHTML = (value, cls = '') =>
+  `<span class="stars ${cls}" role="img" aria-label="${esc(t('rate.starsOf', { n: number(value, locale, { maximumFractionDigits: 1 }) }))}">${[1, 2, 3, 4, 5]
+    .map((n) => `<span class="stars__one" style="--fill:${Math.max(0, Math.min(1, value - n + 1)) * 100}%">${STAR}${STAR}</span>`)
+    .join('')}</span>`;
+
+function paintReviews({ count, average, reviews }) {
+  const section = $('#reviews');
+  $('[data-reviews-summary]', section).innerHTML = count
+    ? `${starsHTML(average, 'stars--lg')}
+       <p><strong>${esc(t('reviews.outOf', { avg: number(average, locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }))}</strong> · ${esc(count === 1 ? t('reviews.countOne') : t('reviews.count', { n: number(count, locale) }))}</p>`
+    : `<p class="reviews__empty">${esc(t('reviews.none'))}</p>`;
+  $('[data-reviews-list]', section).innerHTML = reviews
+    .map(
+      (r) => `
+      <li class="review">
+        <div class="review__head">
+          ${starsHTML(r.rating)}
+          <bdi class="review__name">${esc(r.name)}</bdi>
+          <span class="review__badge">${esc(t('reviews.verified'))}</span>
+          <time class="review__date" datetime="${esc(r.at)}">${esc(date(r.at, locale))}</time>
+        </div>
+        ${r.comment ? `<p class="review__text" lang="${esc(r.locale)}" dir="auto">${esc(r.comment)}</p>` : ''}
+      </li>`
+    )
+    .join('');
+  section.hidden = false;
+}
 
 async function main() {
   let p = null;
@@ -149,6 +180,11 @@ async function main() {
       openLightbox(p.images, current);
     }
   });
+
+  /* Customer reviews (published ratings of delivered orders with this product) */
+  productReviews(p.uuid)
+    .then(paintReviews)
+    .catch(() => {});
 
   /* Also in the collection */
   const others = (await listProducts().catch(() => [])).filter((x) => x.id !== p.id);

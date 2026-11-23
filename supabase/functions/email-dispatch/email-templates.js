@@ -68,6 +68,9 @@ const COPY = {
     address: 'Delivery address',
     payment: 'Payment: Cash on delivery',
     cta: 'View your order',
+    rateTitle: 'How was your order?',
+    rateHint: 'Tap a star to rate it. It takes ten seconds and helps other customers.',
+    rateStar: '{n} of 5 stars',
     footer: 'You’re receiving this email because you placed an order with KUSOOF.',
     store: 'KUSOOF · Cairo, Egypt',
   },
@@ -125,6 +128,9 @@ const COPY = {
     address: 'عنوان التوصيل',
     payment: 'الدفع: نقدًا عند الاستلام',
     cta: 'عرض طلبك',
+    rateTitle: 'كيف كان طلبك؟',
+    rateHint: 'اضغط على نجمة لتقييمه. يستغرق الأمر ثوانيَ ويساعد العملاء الآخرين.',
+    rateStar: '{n} من 5 نجوم',
     footer: 'تصلك هذه الرسالة لأنك قدّمت طلبًا لدى كسوف.',
     store: 'كسوف · القاهرة، مصر',
   },
@@ -155,7 +161,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ESC[ch]);
 /**
  * renderEmail({ type, locale, data, logoUrl }) → { subject, html }
  * data: { customerName, customerPhone, orderNumber, items: [{ name, qty, lineTotal }],
- *         subtotal, deliveryFee, total, address, orderUrl,
+ *         subtotal, deliveryFee, total, address, orderUrl, rateUrl (delivered),
+ *         shopUrl (welcome),
  *         currency: { code, display, decimals }, storeLine }
  */
 export function renderEmail({ type, locale = 'en', data = {}, logoUrl = '' }) {
@@ -203,6 +210,24 @@ export function renderEmail({ type, locale = 'en', data = {}, logoUrl = '' }) {
         <p style="margin:0 0 16px;font-family:${sans};font-size:14px;line-height:1.6;color:#0E0E0E;text-align:${align};">${name}${data.customerPhone ? ` · <span dir="ltr">${esc(data.customerPhone)}</span>` : ''}</p>`
       : '';
 
+  // Delivered email: 5 star links → rate.html?t=<order's rating token>&r=<n>
+  const rate =
+    type === 'delivered' && data.rateUrl
+      ? `<tr><td align="center" style="padding:30px 40px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #EFEFED;border-radius:6px;background:#FAFAF9;">
+          <tr><td align="center" style="padding:22px 18px 20px;">
+            <p style="margin:0 0 4px;font-family:${serif};font-size:24px;color:#0E0E0E;">${esc(c.rateTitle)}</p>
+            <p style="margin:0 0 14px;font-family:${sans};font-size:13px;line-height:1.6;color:#6B6B6B;">${esc(c.rateHint)}</p>
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>${[1, 2, 3, 4, 5]
+              .map(
+                (n) => `<td style="padding:0 3px;"><a href="${esc(`${data.rateUrl}${data.rateUrl.includes('?') ? '&' : '?'}r=${n}`)}" title="${esc(c.rateStar.replace('{n}', n))}" style="display:block;width:40px;height:40px;line-height:40px;font-size:30px;text-align:center;color:#E0A526;text-decoration:none;font-family:Arial,sans-serif;">&#9733;</a></td>`
+              )
+              .join('')}</tr></table>
+          </td></tr>
+        </table>
+      </td></tr>`
+      : '';
+
   const logo = esc(logoUrl);
   const html = `<!doctype html>
 <html lang="${L}" dir="${rtl ? 'rtl' : 'ltr'}">
@@ -225,6 +250,7 @@ export function renderEmail({ type, locale = 'en', data = {}, logoUrl = '' }) {
         <p style="margin:0;font-family:${sans};font-size:15px;line-height:1.7;color:#5E5E5E;">${body}</p>
       </td></tr>
       ${steps}
+      ${rate}
       ${
         welcome
           ? ''

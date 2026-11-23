@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@400;500;600&family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" />
   <link rel="stylesheet" href="css/base.css?v=12" />
-  <link rel="stylesheet" href="css/products.css?v=9" />
+  <link rel="stylesheet" href="css/products.css?v=10" />
 </head>
 <body>
   <a class="skip-link" href="#main" data-i18n="common.skip">Skip to content</a>
@@ -48,6 +48,15 @@
       </div>
     </div>
 
+    <!-- Customer reviews (ratings from the "Delivered" email), filled by js/pages/product.js -->
+    <section class="related reviews" id="reviews" aria-labelledby="reviews-title" hidden>
+      <div class="related__head">
+        <h2 class="related__title" id="reviews-title" data-i18n-html="reviews.title">Customer <em>reviews</em></h2>
+        <div class="reviews__summary" data-reviews-summary></div>
+      </div>
+      <ul class="reviews__list" data-reviews-list></ul>
+    </section>
+
     <section class="related" id="related" aria-labelledby="related-title" hidden>
       <div class="related__head">
         <p class="eyebrow" data-i18n="product.relatedEyebrow">Our Collection</p>
@@ -69,6 +78,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-  <script type="module" src="js/pages/product.js?v=9"></script>
+  <script type="module" src="js/pages/product.js?v=10"></script>
 </body>
 </html>
