@@ -71,28 +71,31 @@ Copies only the website files into `dist/`, generates `dist/js/env.public.js`
 from the environment (or `.env`), and adds Cloudflare `_headers`. The build
 fails if a secret key is supplied as a public value.
 
-## Deployment (Cloudflare Workers — static assets)
+## Deployment (Cloudflare Pages)
 
-Live: **https://kusoof.evascarf.workers.dev**
+Live: **https://kusoof.pages.dev**
 
-The repository is connected to the Cloudflare Worker `kusoof` (Workers
-Builds); every push to `main` builds and deploys automatically. `wrangler.jsonc`
-tells Cloudflare to serve only `dist/` — never the docs, scripts or database
-files.
+The repository is connected to the Cloudflare Pages project ; every
+push to  builds and deploys automatically. Only  is published —
+never the docs, scripts, database files or .
 
-| Setting (Worker › Settings › Build) | Value |
+| Setting (Pages › kusoof › Settings › Build) | Value |
 |---|---|
-| Git repository / branch | `ahmedsaadd249/KUSOOF` · `main` |
-| Build command | `node scripts/build.mjs` |
-| Deploy command | `npx wrangler deploy` |
-| Build variables | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL` (+ `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID` when you have them) |
+| Git repository / production branch |  ·  |
+| Framework preset | None |
+| Build command | ✓ Built dist/ — 299 files, 12.9 MB
+  Supabase:    https://qelbprljqgsrmicvdqet.supabase.co
+  App URL:     http://localhost:5173
+  Google Maps: not set — the map shows its setup message |
+| Build output directory |  |
+| Environment variables | , , ,  (+ ,  when you have them) |
 
-Only public values go in the build variables. Never add Brevo keys, the
+Only public values go in the environment variables. Never add Brevo keys, the
 service role key or access tokens.
 
-- **Logs:** Cloudflare dashboard › Workers & Pages › `kusoof` › Deployments (or Builds) › a build › *View build log*.
-- **Roll back:** Deployments › the previous good version › ⋯ › *Deploy* / *Rollback to this version*.
-- **Other branches:** pushes to other branches can produce preview versions (Settings › Build › Non-production branch builds).
+- **Logs:** Cloudflare dashboard › Workers & Pages ›  › Deployments › a deployment › *View details*.
+- **Roll back:** Deployments › the previous good deployment › ⋯ › *Rollback to this deployment*.
+- **Preview deployments:** pushes to other branches get their own preview URL.
 
 When the production URL changes (e.g. a custom domain), also update the
 Supabase Auth Site URL / redirect URLs, the `APP_URL` Edge Function secret and
