@@ -9,6 +9,27 @@ import { createMapPicker } from '../components/map-picker.js';
 import { NEXT_STATUSES } from '../config.js';
 import { STATUS, PAYMENT, PAYMENT_TONE, LANG, DELIVERY_STATUS, money, asset, statusBadge, toneBadge, langTag } from './labels.js';
 
+/** One line a courier can read: street, building, apartment, area, governorate. */
+function addressLine(a) {
+  return [
+    a.street,
+    a.building ? (/^(building|bldg|no\b|مبنى|عمارة)/i.test(a.building.trim()) ? a.building : `Building ${a.building}`) : '',
+    a.apartment ? (/^(apt|apartment|flat|شقة)/i.test(a.apartment.trim()) ? a.apartment : `Apt ${a.apartment}`) : '',
+    a.area.en && a.area.en !== a.governorate.en ? a.area.en : '',
+    a.governorate.en,
+    'Egypt',
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
+/** The pin if there is one, else a search for the typed address. */
+function mapsUrl(a) {
+  return a.lat != null
+    ? `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine(a))}`;
+}
+
 export async function openOrderPanel(id, { onChange } = {}) {
   const order = await getOrder(id);
   if (!order) {
@@ -46,6 +67,27 @@ export async function openOrderPanel(id, { onChange } = {}) {
         }
       </section>
 
+      <section class="o-section o-deliver">
+        <h3>Deliver to</h3>
+        <p class="o-deliver__name">${esc(o.customer.name)}</p>
+        <p class="o-deliver__phone"><a href="tel:${esc(String(o.customer.phone || '').replace(/[^\d+]/g, ''))}" dir="ltr">${esc(phone(o.customer.phone))}</a></p>
+        <p class="o-deliver__address">${esc(addressLine(a))}</p>
+        ${a.instructions ? `<p class="o-deliver__note"><b>Instructions:</b> ${esc(a.instructions)}</p>` : ''}
+        <div class="o-deliver__actions">
+          <a class="btn btn--solid btn--sm" href="${esc(mapsUrl(a))}" target="_blank" rel="noopener">${a.lat != null ? 'Open in Google Maps' : 'Find in Google Maps'}</a>
+          <button class="btn btn--outline btn--sm" type="button" data-copy-address>Copy address</button>
+        </div>
+        <div class="o-map" data-map style="margin-top:14px"></div>
+        <dl class="kv" style="margin-top:14px">
+          <dt>Governorate</dt><dd>${esc(a.governorate.en)}${a.governorate.ar && a.governorate.ar !== a.governorate.en ? ` · <span lang="ar">${esc(a.governorate.ar)}</span>` : ''}</dd>
+          <dt>Area</dt><dd>${esc(a.area.en || '—')}${a.area.ar && a.area.ar !== a.area.en ? ` · <span lang="ar">${esc(a.area.ar)}</span>` : ''}</dd>
+          <dt>Street</dt><dd>${esc(a.street || '—')}</dd>
+          <dt>Building / Apt</dt><dd>${esc(a.building || '—')} / ${esc(a.apartment || '—')}</dd>
+          ${a.formatted ? `<dt>Map address</dt><dd>${esc(a.formatted)}</dd>` : ''}
+          <dt>Coordinates</dt><dd>${a.lat != null ? `<span dir="ltr">${esc(number(a.lat, 'en', { minimumFractionDigits: 6 }))}, ${esc(number(a.lng, 'en', { minimumFractionDigits: 6 }))}</span>` : 'No map pin (entered manually)'}</dd>
+        </dl>
+      </section>
+
       <section class="o-section">
         <h3>Timeline</h3>
         <ol class="timeline">
@@ -78,24 +120,9 @@ export async function openOrderPanel(id, { onChange } = {}) {
         <dl class="kv">
           <dt>Name</dt><dd>${esc(o.customer.name)}</dd>
           <dt>Email</dt><dd>${esc(o.customer.email)}</dd>
-          <dt>Phone</dt><dd>${esc(phone(o.customer.phone))}</dd>
+          <dt>Phone</dt><dd dir="ltr" style="text-align:start">${esc(phone(o.customer.phone))}</dd>
           <dt>Language</dt><dd>${esc(LANG[o.locale] || o.locale)} — emails go out in ${esc(LANG[o.locale] || o.locale)}</dd>
         </dl>
-      </section>
-
-      <section class="o-section">
-        <h3>Delivery address</h3>
-        <dl class="kv">
-          <dt>Country</dt><dd>Egypt</dd>
-          <dt>Governorate</dt><dd>${esc(a.governorate.en)}${a.governorate.ar && a.governorate.ar !== a.governorate.en ? ` · <span lang="ar">${esc(a.governorate.ar)}</span>` : ''}</dd>
-          <dt>Area</dt><dd>${esc(a.area.en || '—')}${a.area.ar && a.area.ar !== a.area.en ? ` · <span lang="ar">${esc(a.area.ar)}</span>` : ''}</dd>
-          <dt>Street</dt><dd>${esc(a.street || '—')}</dd>
-          <dt>Building / Apt</dt><dd>${esc(a.building || '—')} / ${esc(a.apartment || '—')}</dd>
-          ${a.instructions ? `<dt>Instructions</dt><dd>${esc(a.instructions)}</dd>` : ''}
-          ${a.formatted ? `<dt>Map address</dt><dd>${esc(a.formatted)}</dd>` : ''}
-          <dt>Coordinates</dt><dd>${a.lat != null ? `${esc(number(a.lat, 'en', { minimumFractionDigits: 6 }))}, ${esc(number(a.lng, 'en', { minimumFractionDigits: 6 }))} · <a href="https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lng}" target="_blank" rel="noopener">Open in Google Maps</a>` : 'No map pin (entered manually)'}</dd>
-        </dl>
-        <div class="o-map" data-map style="margin-top:14px"></div>
       </section>
 
       <section class="o-section">
@@ -104,6 +131,18 @@ export async function openOrderPanel(id, { onChange } = {}) {
       </section>`;
 
     createMapPicker(body.querySelector('[data-map]'), { pin: a.lat != null ? { lat: a.lat, lng: a.lng } : null, readonly: true });
+
+    body.querySelector('[data-copy-address]').addEventListener('click', async () => {
+      const text = [o.customer.name, phone(o.customer.phone), addressLine(a), a.instructions ? `Instructions: ${a.instructions}` : '', mapsUrl(a)]
+        .filter(Boolean)
+        .join('\n');
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('Address copied');
+      } catch (err) {
+        toast('Clipboard unavailable in this browser', { tone: 'error' });
+      }
+    });
 
     const form = body.querySelector('[data-status-form]');
     if (!form) return;

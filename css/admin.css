@@ -530,6 +530,12 @@
 .o-totals div { display: flex; justify-content: space-between; }
 .o-totals .total { font-weight: 600; font-size: 15px; }
 .o-map .map-picker__frame { aspect-ratio: 16 / 8; cursor: default; }
+.o-deliver__name { font-size: 16px; font-weight: 600; }
+.o-deliver__phone { margin-top: 2px; font-size: 14px; }
+.o-deliver__phone a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.o-deliver__address { margin-top: 8px; font-size: 15px; line-height: 1.55; }
+.o-deliver__note { margin-top: 6px; font-size: 13.5px; color: var(--ink-70); }
+.o-deliver__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
 /* ---------- Customer profile ---------- */
 .profile-banner { height: 120px; border-radius: var(--a-radius) var(--a-radius) 0 0; background: radial-gradient(80% 140% at 100% 0%, rgba(255, 255, 255, 0.1), transparent 60%), var(--ink); }
