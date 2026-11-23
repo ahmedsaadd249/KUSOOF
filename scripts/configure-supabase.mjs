@@ -46,7 +46,8 @@ if (!ref) {
   console.error('✗ SUPABASE_URL must look like https://<ref>.supabase.co');
   process.exit(1);
 }
-const appUrl = env.APP_URL.replace(/\/$/, '');
+// APP_URL can be overridden for one run (e.g. the live URL) without editing .env
+const appUrl = (process.env.APP_URL || env.APP_URL).replace(/\/$/, '');
 const senderName = env.BREVO_SENDER_NAME || 'KUSOOF';
 
 // The code email (docs/supabase-otp-email.html, without its explanatory comment)
