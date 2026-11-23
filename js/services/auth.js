@@ -81,6 +81,16 @@ export async function signOut() {
   }
 }
 
+/** Is the signed-in user a store admin? (is_admin() on the server; false on any error) */
+export async function isAdmin() {
+  try {
+    const { data, error } = await sb().rpc('is_admin');
+    return !error && data === true;
+  } catch (e) {
+    return false;
+  }
+}
+
 export function getPending() {
   return read(PENDING, null, 'session');
 }

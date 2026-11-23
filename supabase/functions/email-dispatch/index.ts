@@ -1,6 +1,7 @@
 // ===========================================================================
 // KUSOOF — email-dispatch
-// Sends queued order emails (public.email_notifications) through Brevo.
+// Sends queued customer emails (public.email_notifications) through Brevo:
+// the welcome email (one per new customer) and the order emails.
 //
 // Called by the database (pg_net trigger on insert + pg_cron every minute)
 // with a shared secret header; never by the browser. Each run:
@@ -62,40 +63,60 @@ async function complete(admin: any, id: string, ok: boolean, extra: { messageId?
   });
 }
 
+/** The email for one outbox row → { subject, html, toName }. */
+// deno-lint-ignore no-explicit-any
+async function render(admin: any, job: Row, settings: Row | null) {
+  const locale = job.locale === 'ar' ? 'ar' : 'en';
+  const logoUrl = APP_URL.startsWith('https://') ? `${APP_URL}/logo/kusoof-logo-transparent.png` : '';
+
+  // Welcome: belongs to a customer, not an order
+  if (job.notification_type === 'welcome') {
+    const { data: profile } = await admin.from('profiles').select('full_name').eq('id', job.customer_id).maybeSingle();
+    const toName = profile?.full_name ?? '';
+    const rendered = renderEmail({
+      type: 'welcome',
+      locale,
+      logoUrl,
+      data: { customerName: toName, shopUrl: APP_URL ? `${APP_URL}/products.html?lang=${locale}` : '' },
+    });
+    return { ...rendered, toName };
+  }
+
+  const { data: order, error } = await admin.from('orders').select('*, order_items(*)').eq('id', job.order_id).single();
+  if (error || !order) throw new SendError(`Order not found (${error?.message ?? 'missing'})`, true);
+  const rendered = renderEmail({
+    type: job.notification_type,
+    locale,
+    logoUrl,
+    data: {
+      customerName: order.customer_name,
+      customerPhone: formatPhone(order.customer_phone),
+      orderNumber: order.order_number,
+      items: (order.order_items as Row[]).map((i) => ({
+        name: locale === 'ar' && i.product_name_ar ? i.product_name_ar : i.product_name,
+        qty: i.quantity,
+        lineTotal: Number(i.line_total),
+      })),
+      subtotal: Number(order.subtotal),
+      deliveryFee: Number(order.delivery_fee),
+      total: Number(order.total_amount),
+      address: addressLine(order, locale),
+      orderUrl: APP_URL ? `${APP_URL}/order-confirmation.html?order=${encodeURIComponent(order.order_number)}&lang=${locale}` : '',
+      currency: {
+        code: settings?.currency_code ?? 'EGP',
+        display: settings?.currency_display ?? 'code',
+        decimals: settings?.currency_decimals ?? 0,
+      },
+    },
+  });
+  return { ...rendered, toName: order.customer_name as string };
+}
+
 // deno-lint-ignore no-explicit-any
 async function sendOne(admin: any, job: Row, settings: Row | null) {
   let subject = '';
   try {
-    const { data: order, error } = await admin.from('orders').select('*, order_items(*)').eq('id', job.order_id).single();
-    if (error || !order) throw new SendError(`Order not found (${error?.message ?? 'missing'})`, true);
-
-    const locale = job.locale === 'ar' ? 'ar' : 'en';
-    const httpsApp = APP_URL.startsWith('https://');
-    const rendered = renderEmail({
-      type: job.notification_type,
-      locale,
-      logoUrl: httpsApp ? `${APP_URL}/logo/kusoof-logo-transparent.png` : '',
-      data: {
-        customerName: order.customer_name,
-        customerPhone: formatPhone(order.customer_phone),
-        orderNumber: order.order_number,
-        items: (order.order_items as Row[]).map((i) => ({
-          name: locale === 'ar' && i.product_name_ar ? i.product_name_ar : i.product_name,
-          qty: i.quantity,
-          lineTotal: Number(i.line_total),
-        })),
-        subtotal: Number(order.subtotal),
-        deliveryFee: Number(order.delivery_fee),
-        total: Number(order.total_amount),
-        address: addressLine(order, locale),
-        orderUrl: APP_URL ? `${APP_URL}/order-confirmation.html?order=${encodeURIComponent(order.order_number)}&lang=${locale}` : '',
-        currency: {
-          code: settings?.currency_code ?? 'EGP',
-          display: settings?.currency_display ?? 'code',
-          decimals: settings?.currency_decimals ?? 0,
-        },
-      },
-    });
+    const rendered = await render(admin, job, settings);
     subject = rendered.subject;
 
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -103,7 +124,7 @@ async function sendOne(admin: any, job: Row, settings: Row | null) {
       headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({
         sender: { email: SENDER_EMAIL, name: SENDER_NAME },
-        to: [{ email: job.customer_email, name: order.customer_name }],
+        to: [{ email: job.customer_email, ...(rendered.toName ? { name: rendered.toName } : {}) }],
         ...(settings?.store_email ? { replyTo: { email: settings.store_email, name: SENDER_NAME } } : {}),
         subject,
         htmlContent: rendered.html,

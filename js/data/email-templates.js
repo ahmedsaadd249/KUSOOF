@@ -11,10 +11,19 @@
    ========================================================================== */
 
 /** Types the admin can preview, in lifecycle order. */
-export const TEMPLATE_TYPES = ['order_confirmation', 'shipped', 'delivered', 'cancelled'];
+export const TEMPLATE_TYPES = ['welcome', 'order_confirmation', 'shipped', 'delivered', 'cancelled'];
 
 const COPY = {
   en: {
+    welcome: {
+      subject: 'Welcome to KUSOOF',
+      eyebrow: 'Welcome',
+      heading: 'Welcome to KUSOOF',
+      body: 'Hi {name}, your KUSOOF account is ready. There’s no password to remember: you sign in with your email and a one-time code. Explore the collection — every detail has a purpose — and pay in cash when your order arrives.',
+      cta: 'Explore the collection',
+      footer: 'You’re receiving this email because you created a KUSOOF account.',
+      step: -1,
+    },
     order_confirmation: {
       subject: 'Order Confirmed — {number}',
       eyebrow: 'Order confirmed',
@@ -63,6 +72,15 @@ const COPY = {
     store: 'KUSOOF · Cairo, Egypt',
   },
   ar: {
+    welcome: {
+      subject: 'أهلًا بك في كسوف',
+      eyebrow: 'أهلًا بك',
+      heading: 'أهلًا بك في كسوف',
+      body: 'مرحبًا {name}، حسابك في كسوف جاهز. لا حاجة لكلمة مرور: تسجّل الدخول ببريدك الإلكتروني ورمز لمرة واحدة. تصفّح المجموعة — لكلّ تفصيلةٍ غاية — وادفع نقدًا عند استلام طلبك.',
+      cta: 'تصفّح المجموعة',
+      footer: 'تصلك هذه الرسالة لأنك أنشأت حسابًا لدى كسوف.',
+      step: -1,
+    },
     order_confirmation: {
       subject: 'تم تأكيد طلبك — {number}',
       eyebrow: 'تم تأكيد الطلب',
@@ -156,7 +174,9 @@ export function renderEmail({ type, locale = 'en', data = {}, logoUrl = '' }) {
   const subject = copy.subject.replace('{number}', data.orderNumber || '');
   const name = esc(data.customerName || '');
   const number = esc(data.orderNumber || '');
-  const body = esc(copy.body).replace('{name}', name);
+  const body = name ? esc(copy.body).replace('{name}', name) : esc(copy.body).replace(' {name}', '');
+  const welcome = type === 'welcome';
+  const ctaUrl = welcome ? data.shopUrl : data.orderUrl;
 
   const itemRow = (n, q, total) => `
           <tr>
@@ -205,7 +225,10 @@ export function renderEmail({ type, locale = 'en', data = {}, logoUrl = '' }) {
         <p style="margin:0;font-family:${sans};font-size:15px;line-height:1.7;color:#5E5E5E;">${body}</p>
       </td></tr>
       ${steps}
-      <tr><td style="padding:26px 40px 0;">
+      ${
+        welcome
+          ? ''
+          : `<tr><td style="padding:26px 40px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #EFEFED;border-radius:6px;">
           <tr><td style="padding:18px 22px;">
             <p style="margin:0 0 4px;font-family:${sans};font-size:11px;letter-spacing:${track};text-transform:${upper};color:#6B6B6B;text-align:${align};">${esc(c.order)}</p>
@@ -223,17 +246,18 @@ export function renderEmail({ type, locale = 'en', data = {}, logoUrl = '' }) {
         <p style="margin:0 0 4px;font-family:${sans};font-size:11px;letter-spacing:${track};text-transform:${upper};color:#6B6B6B;text-align:${align};">${esc(c.address)}</p>
         <p style="margin:0;font-family:${sans};font-size:14px;line-height:1.6;color:#0E0E0E;text-align:${align};">${esc(data.address || '')}</p>
         <p style="margin:10px 0 0;font-family:${sans};font-size:13px;color:#6B6B6B;text-align:${align};">${esc(c.payment)}</p>
-      </td></tr>
+      </td></tr>`
+      }
       ${
-        data.orderUrl
+        ctaUrl
           ? `<tr><td align="center" style="padding:30px 40px 36px;">
-        <a href="${esc(data.orderUrl)}" style="display:inline-block;padding:14px 30px;border-radius:999px;background:#0E0E0E;color:#FEFEFE;font-family:${sans};font-size:12px;letter-spacing:${track};text-transform:${upper};text-decoration:none;">${esc(c.cta)}</a>
+        <a href="${esc(ctaUrl)}" style="display:inline-block;padding:14px 30px;border-radius:999px;background:#0E0E0E;color:#FEFEFE;font-family:${sans};font-size:12px;letter-spacing:${track};text-transform:${upper};text-decoration:none;">${esc(copy.cta || c.cta)}</a>
       </td></tr>`
           : '<tr><td style="padding:16px 40px 0;"></td></tr>'
       }
       <tr><td style="padding:0 40px;"><div style="height:1px;line-height:1px;background:#E7E5E3;">&nbsp;</div></td></tr>
       <tr><td align="center" style="padding:22px 40px 30px;">
-        <p style="margin:0 0 6px;font-family:${sans};font-size:12px;line-height:1.6;color:#8A8A8A;">${esc(c.footer)}</p>
+        <p style="margin:0 0 6px;font-family:${sans};font-size:12px;line-height:1.6;color:#8A8A8A;">${esc(copy.footer || c.footer)}</p>
         <p style="margin:0;font-family:${sans};font-size:12px;color:#8A8A8A;">${esc(data.storeLine || c.store)}</p>
       </td></tr>
     </table>

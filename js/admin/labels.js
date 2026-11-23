@@ -14,8 +14,9 @@ export const STATUS_COLOR = { preparing: '#A86A00', shipped: '#3172C9', delivere
 export const PAYMENT = { pending: 'Pending', paid: 'Paid', void: 'Void', refunded: 'Refunded' };
 export const PAYMENT_TONE = { pending: 'warn', paid: 'ok', void: 'muted', refunded: 'muted' };
 export const LANG = { en: 'English', ar: 'Arabic' };
-/** Email types (order confirmation + status emails). */
+/** Email types (welcome + order confirmation + status emails). */
 export const EMAIL_TYPE = {
+  welcome: { en: 'Welcome', ar: 'الترحيب' },
   order_confirmation: { en: 'Order confirmation', ar: 'تأكيد الطلب' },
   preparing: { en: 'Preparing', ar: 'قيد التجهيز' },
   shipped: { en: 'Shipped', ar: 'تم الشحن' },

@@ -28,6 +28,7 @@ function sampleData(locale) {
     deliveryFee: 75,
     total: 16875,
     orderUrl: '#',
+    shopUrl: '#',
     currency: settingsSync().currency,
   };
 }
@@ -47,7 +48,7 @@ function statusCell(n) {
 export default {
   id: 'notifications',
   title: 'Email notifications',
-  subtitle: 'Order emails sent to customers through Brevo, in each customer’s language.',
+  subtitle: 'Welcome and order emails sent to customers through Brevo, in each customer’s language.',
   async render(view, { query, refresh }) {
     const all = await listNotifications();
     const type = query.get('type') || '';
@@ -58,7 +59,7 @@ export default {
     const arabic = all.filter((n) => n.locale === 'ar').length;
 
     view.innerHTML = `
-      <div class="phase-note" style="margin-bottom:18px">${ai.info()}<p><strong>How emails are sent.</strong> Placing an order or changing its status queues one email in the order’s language (English or Arabic). Brevo sends it within seconds; temporary failures retry automatically (after 1, 5, 15 and 60 minutes). An email never undoes the order change, and each order gets each type at most once.${queued ? ' Emails stay queued until Brevo is configured (docs/SETUP.md).' : ''}</p></div>
+      <div class="phase-note" style="margin-bottom:18px">${ai.info()}<p><strong>How emails are sent.</strong> A new customer gets one welcome email after confirming their email; placing an order or changing its status queues one email in the order’s language (English or Arabic). Brevo sends it within seconds; temporary failures retry automatically (after 1, 5, 15 and 60 minutes). An email never undoes the order change, and each order gets each type at most once.${queued ? ' Emails stay queued until Brevo is configured (docs/SETUP.md).' : ''}</p></div>
       <div class="a-grid" style="margin-bottom:18px">
         <section class="a-card stat span-3"><span class="stat__label">Sent</span><div class="stat__value">${number(by('sent'), 'en')}</div><div class="stat__foot">${toneBadge('Delivered to Brevo', 'ok')}</div></section>
         <section class="a-card stat span-3"><span class="stat__label">Queued</span><div class="stat__value">${number(queued, 'en')}</div><div class="stat__foot">${queued ? toneBadge('Waiting to send', 'warn') : 'Nothing waiting'}</div></section>
@@ -116,8 +117,8 @@ export default {
               (n) => `
           <tr>
             <td class="cell-main" data-label="Customer">${who(n.customerName, n.customerEmail)}</td>
-            <td data-label="Order"><a class="mono link-btn" href="#/orders?open=${encodeURIComponent(n.orderId)}">${esc(n.orderId)}</a></td>
-            <td data-label="Type"><span class="s-badge" data-status="${esc(n.type === 'order_confirmation' ? 'preparing' : n.type)}"><i aria-hidden="true"></i>${esc((EMAIL_TYPE[n.type] || { en: n.type }).en)}</span></td>
+            <td data-label="Order">${n.orderId ? `<a class="mono link-btn" href="#/orders?open=${encodeURIComponent(n.orderId)}">${esc(n.orderId)}</a>` : '<span class="muted">—</span>'}</td>
+            <td data-label="Type"><span class="s-badge" data-status="${esc(n.type === 'order_confirmation' ? 'preparing' : n.type === 'welcome' ? 'delivered' : n.type)}"><i aria-hidden="true"></i>${esc((EMAIL_TYPE[n.type] || { en: n.type }).en)}</span></td>
             <td data-label="Language">${langTag(n.locale)}</td>
             <td data-label="Subject" ${n.locale === 'ar' ? 'dir="rtl" lang="ar" style="text-align:start"' : ''}>${esc(n.subject)}</td>
             <td data-label="Created" class="muted">${esc(dateTime(n.createdAt, 'en'))}</td>
@@ -126,7 +127,7 @@ export default {
           </tr>`
             )
             .join('')
-        : '<tr><td class="a-table__empty" colspan="8">No emails yet. They appear here when an order is placed or its status changes.</td></tr>';
+        : '<tr><td class="a-table__empty" colspan="8">No emails yet. They appear here when a customer signs up, an order is placed or its status changes.</td></tr>';
       countEl.textContent = `${shown.length} of ${list.length} records`;
       moreBtn.hidden = list.length <= limit;
     }

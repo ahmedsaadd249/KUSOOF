@@ -223,6 +223,7 @@ export default {
     noOrders: 'لا توجد طلبات بعد.',
     startShopping: 'ابدأ التسوق',
     signOut: 'تسجيل الخروج',
+    dashboard: 'لوحة تحكم المتجر',
     signedOut: 'تم تسجيل خروجك.',
     orderItems: {
       zero: 'لا منتجات',

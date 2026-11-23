@@ -19,6 +19,7 @@ const MSG = {
 };
 
 const EMAIL_SUBJECTS = {
+  welcome: 'Welcome to KUSOOF',
   order_confirmation: 'Order Confirmed — KSF-…',
   shipped: 'Your Order Has Been Shipped!',
   delivered: 'Your Order Has Been Delivered!',
@@ -164,7 +165,7 @@ export default {
 
           <section class="a-card" aria-labelledby="st-notify">
             <div class="a-card__head"><div><h2 class="a-card__title" id="st-notify">Customer emails</h2><p class="a-card__sub">Sent through Brevo in the customer’s language. Turned-off types are recorded as “Skipped”.</p></div></div>
-            ${['order_confirmation', 'shipped', 'delivered', 'cancelled']
+            ${['welcome', 'order_confirmation', 'shipped', 'delivered', 'cancelled']
               .map(
                 (k) => `
               <div class="toggle-row"><div>${esc(EMAIL_TYPE[k].en)} · <span lang="ar">${esc(EMAIL_TYPE[k].ar)}</span><small>“${esc(EMAIL_SUBJECTS[k])}”</small></div>
@@ -234,6 +235,7 @@ export default {
               currency: currencyPrefs(),
               lowStockThreshold: Number(v.threshold),
               notifications: {
+                welcome: f['n-welcome'].checked,
                 order_confirmation: f['n-order_confirmation'].checked,
                 shipped: f['n-shipped'].checked,
                 delivered: f['n-delivered'].checked,

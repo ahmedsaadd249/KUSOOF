@@ -8,7 +8,7 @@ import { $, $$, param, reduceMotion } from '../core/dom.js';
 import { bindForm, rules } from '../core/validate.js';
 import { money, date, initials, firstName } from '../core/format.js';
 import { toast } from '../core/ui.js';
-import { getSession, signOut, register, signIn } from '../services/auth.js';
+import { getSession, signOut, register, signIn, isAdmin } from '../services/auth.js';
 import { listOrders } from '../services/orders.js';
 import { OTP_LENGTH, OTP_TTL_MINUTES } from '../config.js';
 import { icons } from '../components/icons.js';
@@ -31,7 +31,13 @@ async function showOverview(session) {
     <dl>
       <div><dt>${esc(t('account.memberSinceLabel'))}</dt><dd>${esc(date(session.createdAt || session.verifiedAt, locale))}</dd></div>
     </dl>
+    <a class="btn btn--solid" href="admin/" id="admin-link" hidden>${esc(t('account.dashboard'))} ${icons.arrow()}</a>
     <button class="btn btn--outline" type="button" id="sign-out">${esc(t('account.signOut'))}</button>`;
+
+  // Store admins get a way into the dashboard (the server decides who is admin)
+  isAdmin().then((admin) => {
+    if (admin) $('#admin-link').hidden = false;
+  });
 
   $('#sign-out').addEventListener('click', async () => {
     await signOut();
@@ -41,7 +47,8 @@ async function showOverview(session) {
 
   let orders = [];
   try {
-    orders = await listOrders();
+    // Only this customer's orders (an admin's RLS would otherwise return every order)
+    orders = await listOrders({ customerId: session.customerId });
   } catch (err) {
     toast(t('common.errorGeneric'), { tone: 'error' });
   }

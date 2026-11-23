@@ -202,6 +202,7 @@ export default {
     noOrders: 'No orders yet.',
     startShopping: 'Start shopping',
     signOut: 'Sign out',
+    dashboard: 'Store dashboard',
     signedOut: 'You’ve been signed out.',
     orderItems: { one: '{count} item', other: '{count} items' },
     viewOrder: 'View order',

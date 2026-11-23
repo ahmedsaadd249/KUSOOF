@@ -185,7 +185,7 @@ export default {
         <section class="a-card span-4" aria-labelledby="nt-title">
           <div class="a-card__head"><h2 class="a-card__title" id="nt-title">Notifications</h2><a class="link-btn" href="#/notifications">History</a></div>
           <div class="tabs-mini" role="tablist" aria-label="Notification type">
-            ${['all', 'order_confirmation', 'shipped', 'delivered', 'cancelled'].map((k, i) => `<button type="button" role="tab" aria-selected="${i === 0}" data-ntab="${k}">${k === 'all' ? 'All' : k === 'order_confirmation' ? 'Confirmed' : EMAIL_TYPE[k].en}</button>`).join('')}
+            ${['all', 'welcome', 'order_confirmation', 'shipped', 'delivered', 'cancelled'].map((k, i) => `<button type="button" role="tab" aria-selected="${i === 0}" data-ntab="${k}">${k === 'all' ? 'All' : k === 'order_confirmation' ? 'Confirmed' : EMAIL_TYPE[k].en}</button>`).join('')}
           </div>
           <div class="a-list" data-notes></div>
         </section>
@@ -252,7 +252,7 @@ export default {
           <div class="a-list__row">
             <div class="a-list__main">
               <p class="a-list__title">${esc(n.subject)}</p>
-              <p class="a-list__meta">${esc(n.customerEmail)} · ${esc(n.orderId)} · ${esc(date(n.createdAt, 'en', { day: 'numeric', month: 'short' }))}</p>
+              <p class="a-list__meta">${[n.customerEmail, n.orderId, date(n.createdAt, 'en', { day: 'numeric', month: 'short' })].filter(Boolean).map(esc).join(' · ')}</p>
             </div>
             ${toneBadge((DELIVERY_STATUS[n.status] || { label: n.status }).label, (DELIVERY_STATUS[n.status] || { tone: 'muted' }).tone)} ${langTag(n.locale)}
           </div>`

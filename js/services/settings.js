@@ -14,7 +14,7 @@ const DEFAULTS = {
   store: { name: 'KUSOOF', email: '', phone: '', address: 'Cairo, Egypt' },
   currency: { code: 'EGP', display: 'code', decimals: 0 },
   lowStockThreshold: LOW_STOCK_DEFAULT,
-  notifications: { order_confirmation: true, shipped: true, delivered: true, cancelled: true, lowStockAlert: true },
+  notifications: { welcome: true, order_confirmation: true, shipped: true, delivered: true, cancelled: true, lowStockAlert: true },
   delivery: { enabled: true },
 };
 
@@ -25,6 +25,7 @@ function fromRow(r) {
     currency: { code: r.currency_code, display: r.currency_display, decimals: r.currency_decimals },
     lowStockThreshold: r.default_low_stock_threshold,
     notifications: {
+      welcome: r.notify_welcome,
       order_confirmation: r.notify_order_confirmation,
       shipped: r.notify_shipped,
       delivered: r.notify_delivered,
@@ -51,6 +52,7 @@ function toRow(s) {
   if ('lowStockThreshold' in s) row.default_low_stock_threshold = Math.max(0, Math.round(Number(s.lowStockThreshold) || 0));
   if (s.notifications) {
     const n = s.notifications;
+    if ('welcome' in n) row.notify_welcome = Boolean(n.welcome);
     if ('order_confirmation' in n) row.notify_order_confirmation = Boolean(n.order_confirmation);
     if ('shipped' in n) row.notify_shipped = Boolean(n.shipped);
     if ('delivered' in n) row.notify_delivered = Boolean(n.delivered);

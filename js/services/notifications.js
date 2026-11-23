@@ -1,14 +1,15 @@
 /* ==========================================================================
    Email notifications (admin) — history of the emails sent through Brevo by
-   the email-dispatch Edge Function. Rows are created by the database when an
-   order is placed or its status changes (one per order and type, ever).
+   the email-dispatch Edge Function. Rows are created by the database when a
+   new customer verifies their email (welcome, once) and when an order is
+   placed or its status changes (one per order and type, ever).
    ========================================================================== */
 import { sb, run, watchTable, searchTerm } from './api.js';
 
 const mapNotification = (r) => ({
   id: r.id,
-  orderId: r.orders ? r.orders.order_number : '',
-  customerName: r.orders ? r.orders.customer_name : '',
+  orderId: r.orders ? r.orders.order_number : '', // '' for the welcome email
+  customerName: r.orders ? r.orders.customer_name : (r.profiles && r.profiles.full_name) || '',
   customerEmail: r.customer_email,
   type: r.notification_type,
   locale: r.locale,
@@ -25,7 +26,7 @@ const mapNotification = (r) => ({
 export async function listNotifications({ type, status, search } = {}) {
   let q = sb()
     .from('email_notifications')
-    .select('*, orders(order_number, customer_name)')
+    .select('*, orders(order_number, customer_name), profiles(full_name)')
     .order('created_at', { ascending: false })
     .limit(500);
   if (type) q = q.eq('notification_type', type);
