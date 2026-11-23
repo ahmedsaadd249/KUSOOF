@@ -341,6 +341,8 @@ export default {
     near: 'بالقرب من {place}',
     use: 'استخدم هذا العنوان',
     used: 'تم تحديث العنوان من الخريطة',
+    filled: 'تم الملء من الخريطة: {fields}. يمكنك تعديلها.',
+    addApartment: 'أضف رقم الشقة.',
   },
 
   confirm: {

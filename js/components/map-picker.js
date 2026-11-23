@@ -8,7 +8,7 @@
 
    onChange({ lat, lng, address }) after every click / drag / search /
    geolocation, where address = { formatted, country, governorate, area,
-   areaCandidates[], street } (in the page language).
+   areaCandidates[], street, building } (in the page language).
    Delivery is restricted to Egypt: the map is bounded to Egypt, search is
    limited to Egypt, and pins outside Egypt are rejected.
 
@@ -98,11 +98,20 @@ const GOVERNORATES = {
 };
 
 /** A Nominatim result → the address shape the checkout uses. */
-export function parseAddress(place = {}) {
+export function parseAddress(place = {}, { fromSearch = false } = {}) {
   const a = place.address || {};
   const road = a.road || a.pedestrian || a.footway || '';
   const number = String(a.house_number || '').trim();
-  const candidates = [...new Set(AREA_KEYS.map((k) => String(a[k] || '').trim()).filter(Boolean))];
+  // A result that *is* an area ("Maadi") counts as the most local name; for any other
+  // search result, the name the customer searched for is tried after the real areas.
+  const isArea = ['place', 'boundary'].includes(place.category) && place.name;
+  const candidates = [
+    ...new Set(
+      [isArea ? place.name : '', ...AREA_KEYS.map((k) => String(a[k] || '').trim()), fromSearch && !isArea ? place.name : '']
+        .map((s) => String(s || '').trim())
+        .filter(Boolean)
+    ),
+  ];
   const formatted = String(place.display_name || '');
   const sep = locale === 'ar' ? '، ' : ', ';
   return {
@@ -112,7 +121,8 @@ export function parseAddress(place = {}) {
     governorate: GOVERNORATES[a['ISO3166-2-lvl4']] || a.state || a.province || a.region || a.city || '',
     area: candidates[0] || '',
     areaCandidates: candidates,
-    street: [number, road].filter(Boolean).join(' '),
+    street: road,
+    building: number,
   };
 }
 
@@ -128,16 +138,35 @@ const reverseGeocode = async (lat, lng) => {
   return data && !data.error ? parseAddress(data) : parseAddress({});
 };
 
-const searchPlaces = async (q) => {
+const km = (a, b) => {
+  const r = Math.PI / 180;
+  const x = (b.lng - a.lng) * r * Math.cos(((a.lat + b.lat) / 2) * r);
+  const y = (b.lat - a.lat) * r;
+  return Math.sqrt(x * x + y * y) * 6371;
+};
+
+/** Search all of Egypt, then rank: well-known places first, areas a little higher
+    ("Mohandessin" the district over a resort of that name), and among equals the
+    one nearest to `near` (the map centre) — e.g. the Tahrir Street in view. */
+const searchPlaces = async (q, near) => {
   const data = await nominatim('/search', {
     format: 'jsonv2',
     q,
     countrycodes: 'eg',
-    limit: 6,
+    limit: 10,
     addressdetails: 1,
     'accept-language': locale,
   });
-  return (Array.isArray(data) ? data : []).map((p) => ({ lat: Number(p.lat), lng: Number(p.lon), address: parseAddress(p) }));
+  return (Array.isArray(data) ? data : [])
+    .map((p) => {
+      const lat = Number(p.lat);
+      const lng = Number(p.lon);
+      const isArea = ['place', 'boundary'].includes(p.category);
+      const score = (Number(p.importance) || 0) + (isArea ? 0.15 : 0) - (near ? (Math.min(km(near, { lat, lng }), 1000) / 1000) * 0.05 : 0);
+      return { lat, lng, score, address: parseAddress(p, { fromSearch: true }) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
 };
 
 function pinHTML() {
@@ -370,7 +399,7 @@ export function createMapPicker(root, { pin = null, onChange, onUnavailable, rea
       results = [];
       paintList(t('map.searching'));
       try {
-        const found = await searchPlaces(q);
+        const found = await searchPlaces(q, map.getCenter());
         if (no !== searchNo) return;
         results = found.filter((r) => insideEgypt(r.lat, r.lng));
         active = results.length ? 0 : -1;

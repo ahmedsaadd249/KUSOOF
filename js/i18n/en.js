@@ -299,6 +299,8 @@ export default {
     near: 'Near {place}',
     use: 'Use this address',
     used: 'Address updated from the map',
+    filled: 'Filled from the map: {fields}. You can edit them.',
+    addApartment: 'Add your apartment number.',
   },
 
   confirm: {

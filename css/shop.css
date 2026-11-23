@@ -177,6 +177,11 @@
 .map-readout__address { margin-top: 2px; font-size: 14.5px; }
 .map-readout__coords { margin-top: 2px; font-size: 12.5px; color: var(--ink-60); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
 .map-readout__empty { grid-column: 1 / -1; font-size: 13px; color: var(--ink-60); }
+.map-readout__note { margin-top: 8px; font-size: 13px; color: var(--ink-70); }
+/* A field the map just filled */
+@keyframes autofilled { from { background-color: #FFF4D6; border-color: #E0B84A; } to { background-color: var(--surface); } }
+.is-autofilled { animation: autofilled 1.6s ease-out; }
+@media (prefers-reduced-motion: reduce) { .is-autofilled { animation: none; } }
 @media (max-width: 599px) { .map-readout { grid-template-columns: minmax(0, 1fr); } .map-picker__frame { aspect-ratio: 4 / 3.4; } }
 
 /* ---------- Confirmation ---------- */

@@ -99,13 +99,15 @@ function paintGovernorates(selected = '') {
 
 /** Pre-select governorate / area from what the map returned (customer can change it). */
 function matchZone(address) {
-  if (!address) return;
+  const filled = [];
+  if (!address) return filled;
   const gov = governorates(zones).find((g) => same(g.en, address.governorate) || same(g.ar, address.governorate));
-  if (!gov) return;
+  if (!gov) return filled;
   if ($('#co-governorate').value !== gov.en) {
     $('#co-governorate').value = gov.en;
     paintAreas();
   }
+  filled.push('#co-governorate');
   const { areas, wide } = zonesFor(zones, gov.en);
   const candidates = address.areaCandidates && address.areaCandidates.length ? address.areaCandidates : [address.area];
   // Most local place name first; a zone matches when its name is (whole words of) that name.
@@ -114,21 +116,22 @@ function matchZone(address) {
     area = areas.find((z) => nameIn(z.area.en, c) || nameIn(z.area.ar, c));
     if (area) break;
   }
-  if (area) $('#co-zone').value = area.id;
-  else if (wide) {
+  if (area) {
+    $('#co-zone').value = area.id;
+    filled.push('#co-zone');
+  } else if (wide) {
     $('#co-zone').value = OTHER;
-    const input = $('#co-area');
-    if (!input.value.trim() || input.value === mapFilled['#co-area']) {
-      input.value = candidates[0] || '';
-      mapFilled['#co-area'] = input.value;
-    }
+    filled.push('#co-zone');
+    if (setFromMap('#co-area', candidates[0])) filled.push('#co-area');
   }
   toggleOtherArea();
   if (check) {
     check.validateField('governorate');
     check.validateField('zone');
+    if (filled.includes('#co-area')) check.validateField('area');
   }
   paintSummary();
+  return filled;
 }
 
 /* ---------- Summary ---------- */
@@ -163,27 +166,62 @@ function paintReadout() {
       <p class="map-readout__label">${esc(t('map.selected'))}</p>
       <p class="map-readout__address">${esc(a.formatted || '—')}</p>
       <p class="map-readout__coords">${esc(t('map.coords'))}: ${esc(number(pin.lat, 'en', { minimumFractionDigits: 6 }))}, ${esc(number(pin.lng, 'en', { minimumFractionDigits: 6 }))}</p>
+      ${filledNote ? `<p class="map-readout__note">${esc(filledNote)}</p>` : ''}
     </div>
     ${a.street || a.governorate ? `<button class="btn btn--outline btn--sm" type="button" data-use-address>${icons.pin({ size: 14 })} ${esc(t('map.use'))}</button>` : ''}`;
 }
 
-/* Text the map wrote into a field. A new pin may replace it; text the customer typed is never overwritten automatically. */
-const mapFilled = {};
+/* Every new pin (click, drag, search, my location) fills the address fields
+   from the map; the customer can still edit them. Fields the map has no value
+   for keep what the customer typed. */
+const FIELD_LABEL = {
+  '#co-governorate': 'checkout.governorate',
+  '#co-zone': 'checkout.area',
+  '#co-area': 'checkout.area',
+  '#co-street': 'checkout.street',
+  '#co-building': 'checkout.building',
+};
+let filledNote = '';
+const mapValues = {}; // what the map last wrote into each text field
 
-function useAddress({ onlyEmpty = false } = {}) {
-  if (!lastAddress) return;
-  const el = $('#co-street');
-  const value = lastAddress.street;
+/** Write the map's value; if the map has none, clear only text the map wrote itself. */
+function setFromMap(sel, value) {
+  const el = $(sel);
   if (value) {
-    const current = el.value.trim();
-    if (!(onlyEmpty && current && current !== mapFilled['#co-street'])) {
-      el.value = value;
-      mapFilled['#co-street'] = value;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  }
-  matchZone(lastAddress);
-  if (!onlyEmpty) toast(t('map.used'));
+    el.value = value;
+    mapValues[sel] = value;
+  } else if (mapValues[sel] && el.value === mapValues[sel]) {
+    el.value = '';
+    delete mapValues[sel];
+  } else return false;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  return Boolean(value);
+}
+
+function flash(sel) {
+  const el = $(sel);
+  el.classList.remove('is-autofilled');
+  void el.offsetWidth; // restart the animation
+  el.classList.add('is-autofilled');
+}
+
+function useAddress({ announce = false } = {}) {
+  if (!lastAddress) return;
+  const filled = matchZone(lastAddress);
+  [
+    ['#co-street', lastAddress.street],
+    ['#co-building', lastAddress.building],
+  ].forEach(([sel, value]) => {
+    if (setFromMap(sel, value)) filled.push(sel);
+  });
+  filled.forEach(flash);
+  const names = [...new Set(filled.map((sel) => t(FIELD_LABEL[sel])))];
+  const notes = [];
+  if (names.length) notes.push(t('map.filled', { fields: new Intl.ListFormat(locale, { type: 'conjunction' }).format(names) }));
+  if (!$('#co-apartment').value.trim()) notes.push(t('map.addApartment'));
+  filledNote = notes.join(' ');
+  paintReadout();
+  if (announce) toast(t('map.used'));
 }
 
 /* ---------- Errors from the server ---------- */
@@ -313,8 +351,7 @@ async function main() {
     onChange: ({ lat, lng, address }) => {
       pin = { lat, lng };
       lastAddress = address;
-      paintReadout();
-      useAddress({ onlyEmpty: true });
+      useAddress();
       if (check) check.validateField('pin');
       $('#pin-field').classList.remove('is-invalid');
     },
@@ -327,7 +364,7 @@ async function main() {
   mapAvailable = map.available;
   paintReadout();
   $('#map-readout').addEventListener('click', (e) => {
-    if (e.target.closest('[data-use-address]')) useAddress();
+    if (e.target.closest('[data-use-address]')) useAddress({ announce: true });
   });
 
   $('#co-governorate').addEventListener('change', () => {
