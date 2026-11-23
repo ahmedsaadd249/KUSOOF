@@ -147,16 +147,19 @@
 .map-picker__frame.is-setup { aspect-ratio: auto; background: #FAFAF9; }
 .field.is-invalid .map-picker__frame,
 .map-picker.is-invalid .map-picker__frame { border-color: var(--err); box-shadow: 0 0 0 4px rgba(179, 38, 30, 0.08); }
-.map-picker__canvas { position: absolute; inset: 0; }
+/* Leaflet's panes use z-index 400+; keep them inside the frame */
+.map-picker__canvas { position: absolute; inset: 0; z-index: 0; isolation: isolate; background: #F3F3F1; font: inherit; }
 .map-picker__canvas:focus { outline: none; }
+.map-picker__canvas .leaflet-control-attribution { font-size: 10.5px; background: rgba(255, 255, 255, 0.8); }
 
-/* Brand pin (Google AdvancedMarker content) */
+/* Brand pin (Leaflet divIcon content) */
+.map-pin-icon { background: none; border: 0; }
 .map-pin { transform: translateY(4px); filter: drop-shadow(0 6px 8px rgba(14, 14, 14, 0.25)); cursor: grab; }
 .map-pin__body { fill: var(--ink); stroke: #fff; stroke-width: 1.5; }
 .map-pin__dot { fill: #fff; }
 .map-pin__shadow { fill: rgba(14, 14, 14, 0.22); }
 
-.map-picker__controls { position: absolute; top: 12px; inset-inline-end: 12px; display: grid; gap: 6px; z-index: 1; }
+.map-picker__controls { position: absolute; top: 12px; inset-inline-end: 12px; display: grid; gap: 6px; z-index: 2; }
 .map-picker__btn { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--hairline); background: rgba(255, 255, 255, 0.95); box-shadow: 0 6px 14px -10px rgba(14, 14, 14, 0.5); transition: background-color 0.3s; }
 .map-picker__btn:hover { background: #fff; border-color: var(--ink-35); }
 .map-picker__btn.is-busy { opacity: 0.55; pointer-events: none; }

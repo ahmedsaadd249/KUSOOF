@@ -47,12 +47,20 @@ const norm = (s) =>
     .replace(/^ال/, '')
     .replace(/[أإآ]/g, 'ا')
     .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/(\p{L})\1+/gu, '$1') // "Mohandessin" / "Mohandesin"
     .trim();
 const same = (a, b) => {
   const x = norm(a);
   const y = norm(b);
   return Boolean(x && y) && (x === y || (x.length > 3 && y.length > 3 && (x.includes(y) || y.includes(x))));
+};
+/** "Maadi" in "Maadi al Khahiri", "المعادي" in "معادي الخبيري" — not "Cairo" in "Downtown Cairo". */
+const nameIn = (name, place) => {
+  const n = norm(name);
+  const p = norm(place);
+  return Boolean(n && p) && (n === p || (n.length >= 3 && ` ${p} `.includes(` ${n} `)));
 };
 
 function selectedZone() {
@@ -89,7 +97,7 @@ function paintGovernorates(selected = '') {
   select.value = selected && [...select.options].some((o) => o.value === selected) ? selected : '';
 }
 
-/** Pre-select governorate / area from what Google returned (customer can change it). */
+/** Pre-select governorate / area from what the map returned (customer can change it). */
 function matchZone(address) {
   if (!address) return;
   const gov = governorates(zones).find((g) => same(g.en, address.governorate) || same(g.ar, address.governorate));
@@ -100,7 +108,12 @@ function matchZone(address) {
   }
   const { areas, wide } = zonesFor(zones, gov.en);
   const candidates = address.areaCandidates && address.areaCandidates.length ? address.areaCandidates : [address.area];
-  const area = areas.find((z) => candidates.some((c) => same(z.area.en, c) || same(z.area.ar, c)));
+  // Most local place name first; a zone matches when its name is (whole words of) that name.
+  let area = null;
+  for (const c of candidates) {
+    area = areas.find((z) => nameIn(z.area.en, c) || nameIn(z.area.ar, c));
+    if (area) break;
+  }
   if (area) $('#co-zone').value = area.id;
   else if (wide) {
     $('#co-zone').value = OTHER;

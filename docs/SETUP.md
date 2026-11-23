@@ -1,4 +1,4 @@
-# KUSOOF — backend setup (Supabase · Brevo · Google Maps)
+# KUSOOF — backend setup (Supabase · Brevo · map)
 
 The backend is already created and deployed. This guide lists **what you
 still need to do** (credentials only you can create) and how everything fits
@@ -7,14 +7,14 @@ together.
 | | Status |
 |---|---|
 | Supabase project `kusoof` (ref `qelbprljqgsrmicvdqet`, Frankfurt) | ✅ created |
-| Database: 9 tables, RLS on every table, order/status functions, seed (2 products, 32 delivery zones) | ✅ applied (`supabase/migrations/`) |
+| Database: 9 tables, RLS on every table, order/status functions, seed (2 products, delivery zones for all 27 governorates) | ✅ applied (`supabase/migrations/`) |
 | Storage bucket `product-images` (public read, admin write, 5 MB, JPG/PNG/WebP/AVIF) | ✅ created |
 | Edge Functions `admin-request-code`, `email-dispatch` | ✅ deployed |
 | Email queue: database trigger + `pg_cron` (every minute) → `email-dispatch` | ✅ running |
 | **Supabase Auth email settings + Brevo SMTP** | ⏳ you — step 2 |
 | **Brevo secrets for order emails** | ⏳ you — step 3 |
 | **Your admin email** | ⏳ you — step 4 |
-| **Google Maps key + Map ID** | ⏳ you — step 5 |
+| Checkout map (OpenStreetMap, no key) | ✅ nothing to set up |
 
 ---
 
@@ -36,7 +36,6 @@ static server and open <http://localhost:5173>.
 | `SUPABASE_SERVICE_ROLE_KEY` | nowhere yet (keep for local admin scripts) | **yes — never in `js/`** |
 | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | Edge Function secrets (step 3) | **yes** |
 | `BREVO_SMTP_LOGIN`, `BREVO_SMTP_KEY` | Supabase Auth SMTP settings (step 2) | **yes** |
-| `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID` | browser | public by nature — restrict it (step 5) |
 | `APP_URL` | browser + Edge Function secret | no |
 | `ADMIN_EMAIL` | your note of the admin email (step 4) | no |
 
@@ -115,26 +114,21 @@ then insert the new one. Admin rights are checked by the database
 
 ---
 
-## 5. Google Maps
+## 5. Map
 
-Google Cloud console (a project with billing):
+The checkout map uses Leaflet with OpenStreetMap tiles; addresses come from
+OpenStreetMap's Nominatim. There is no key and nothing to set up.
 
-1. **APIs & Services → Library**: enable **Maps JavaScript API**,
-   **Places API (New)** and **Geocoding API**.
-2. **Credentials → Create API key**, then *Edit*:
-   - Application restriction: **Websites** → `http://localhost:5173/*` and
-     `https://your-domain/*`
-   - API restriction: the three APIs above only.
-3. **Google Maps Platform → Map management → Create Map ID** (JavaScript,
-   Vector). The draggable pin needs it.
-4. Put both in `.env` (`GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID`) and run
-   `node scripts/write-env.mjs`.
-
-Without a key the checkout shows a clear "Map not set up yet" message and
-customers type their address (the pin is optional only in that case). With
-the key: search (Egypt only), click/drag the pin, my-location, and the
-governorate/area are matched to your delivery zones — the customer always
-confirms the area, and the fee is always the zone's fee from the database.
+- Search runs when the customer presses Enter (Nominatim doesn't allow
+  search-as-you-type) and is limited to Egypt; requests are spaced at least a
+  second apart and cached, as its usage policy asks.
+- Click or drag the pin, or use "my location"; the address is looked up and
+  the governorate (by its official ISO code) and area are matched to your
+  delivery zones. The customer always confirms the area, and the fee is
+  always the zone's fee from the database.
+- Delivery zones: all 27 governorates exist; Cairo, Giza and Alexandria also
+  have named areas. Change fees, add areas or turn zones off in
+  Admin › Settings › Shipping zones.
 
 ---
 

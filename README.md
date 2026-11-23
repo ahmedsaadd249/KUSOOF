@@ -10,7 +10,7 @@ checkout and a full admin dashboard.
 | Animation | GSAP 3 + ScrollTrigger, Lenis (CDN) |
 | Backend | Supabase — Postgres + Row Level Security, Auth (email one-time codes), Storage, Edge Functions |
 | Email | Brevo (sign-in codes via Supabase SMTP, order emails via the `email-dispatch` function) |
-| Maps | Google Maps JavaScript API + Places API (New) + Geocoding API (optional) |
+| Maps | Leaflet + OpenStreetMap tiles, Nominatim address search (no key needed) |
 | Hosting | Cloudflare Pages (static), deployed automatically from GitHub |
 
 ## Project structure
@@ -24,7 +24,7 @@ js/services/                           data access (RLS-protected tables + RPCs)
 supabase/migrations/                   database schema, RLS, functions, seed
 supabase/functions/                    Edge Functions (admin-request-code, email-dispatch)
 scripts/                               build + setup scripts (Node, no dependencies)
-docs/SETUP.md                          backend setup: Supabase, Brevo, Google Maps, admin
+docs/SETUP.md                          backend setup: Supabase, Brevo, map, admin
 ```
 
 ## Run locally
@@ -49,8 +49,6 @@ lists every name with empty values.
 | `SUPABASE_URL` | browser | yes |
 | `SUPABASE_ANON_KEY` | browser (RLS protects the data) | yes |
 | `APP_URL` | browser + email links | yes |
-| `GOOGLE_MAPS_API_KEY` | browser — restrict it by HTTP referrer and API | yes (restricted) |
-| `GOOGLE_MAPS_MAP_ID` | browser | yes |
 | `SUPABASE_SERVICE_ROLE_KEY` | local scripts only — never in the site | **secret** |
 | `SUPABASE_ACCESS_TOKEN` | `scripts/configure-supabase.mjs` only | **secret** |
 | `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME` | Supabase Edge Function secrets | **secret** |
@@ -85,7 +83,7 @@ never the docs, scripts, database files or `.env`.
 | Framework preset | None |
 | Build command | `node scripts/build.mjs` |
 | Build output directory | `dist` |
-| Environment variables | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL`, `NODE_VERSION=22` (+ `GOOGLE_MAPS_API_KEY`, `GOOGLE_MAPS_MAP_ID` when you have them) |
+| Environment variables | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL`, `NODE_VERSION=22` |
 
 Only public values go in the environment variables. Never add Brevo keys, the
 service role key or access tokens.
@@ -95,8 +93,8 @@ service role key or access tokens.
 - **Preview deployments:** pushes to other branches get their own preview URL.
 
 When the production URL changes (e.g. a custom domain), also update the
-Supabase Auth Site URL / redirect URLs, the `APP_URL` Edge Function secret and
-the Google Maps key's allowed referrers — see `docs/SETUP.md`.
+Supabase Auth Site URL / redirect URLs and the `APP_URL` Edge Function secret
+— see `docs/SETUP.md`.
 
 ## Backend
 
