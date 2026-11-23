@@ -1,8 +1,11 @@
 /* ==========================================================================
    KUSOOF — scroll-driven assembly
    GSAP + ScrollTrigger + Lenis (all via CDN, no build step)
+   Starts once js/pages/home.js has put the translated text in place
+   (event "kusoof:i18n-ready"), because the chapter headings are split into
+   animated words below.
    ========================================================================== */
-(() => {
+const startLanding = () => {
   'use strict';
 
   /* ---------- Config ---------- */
@@ -321,6 +324,9 @@
       });
       node.replaceWith(frag);
     });
+    // Already translated: stop later translation passes from replacing the word spans
+    el.removeAttribute('data-i18n-html');
+    el.removeAttribute('data-i18n');
     return $$('.word__inner', el);
   }
 
@@ -520,4 +526,17 @@
     onScrollUpdate({ progress: 0 });
     intro();
   });
-})();
+};
+
+// Build the animation from the final (translated) headings, never before.
+if (window.KUSOOF && window.KUSOOF.i18nReady) startLanding();
+else {
+  let started = false;
+  const go = () => {
+    if (started) return;
+    started = true;
+    startLanding();
+  };
+  window.addEventListener('kusoof:i18n-ready', go, { once: true });
+  setTimeout(go, 4000); // never leave the landing blank if translation can't run
+}
