@@ -43,6 +43,15 @@ const startLanding = () => {
   const TRANS = 4;               // length of a chapter in/out, in timeline units
   const CALLOUTS_OUT_AT = 13;    // stage-1 callouts leave before the parts start travelling
 
+  // Loader story: the assembled glasses drop in, split at the bridge into two
+  // halves while loading, rejoin at 100%, then the canvas plays them apart
+  // into the sequence's first (exploded) frame.
+  const LOADER_MIN_MS = 2600;    // the story never plays faster than this
+  const SPLIT_PEAK = 0.7;        // halves furthest apart at 70% loaded
+  const SPLIT_SHIFT = 0.07;      // each half travels 7% of the frame's width
+  const SPLIT_TILT = 3;          // degrees
+  const BURST_S = 1.4;           // assembled → exploded hand-off
+
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- DOM ---------- */
@@ -55,6 +64,9 @@ const startLanding = () => {
   const loaderFill = $('.loader__fill');
   const loaderBar = $('.loader__bar');
   const loaderCount = $('.loader__count');
+  const glassesEl = $('.loader__glasses');
+  const halfL = $('.loader__half--l');
+  const halfR = $('.loader__half--r');
   const header = $('.site-header');
   const sequence = $('.sequence');
   const stage = $('.stage');
@@ -115,7 +127,22 @@ const startLanding = () => {
     const b = boxEl.getBoundingClientRect();
     box = { x: b.left - r.left, y: b.top - r.top, w: b.width, h: b.height };
     lastKey = ''; // force the next tick to redraw
+    placeGlasses();
     maybeUpgrade();
+  }
+
+  // Put the loader's glasses exactly where render() will draw the frame at the
+  // starting zoom, so the hand-off to the canvas has no jump.
+  function placeGlasses() {
+    if (!glassesEl || !glassesEl.isConnected || !box.w) return;
+    const r = stage.getBoundingClientRect();
+    const scale = Math.min(box.w / FRAME_W, box.h / FRAME_H) * ZOOM_FROM;
+    const w = FRAME_W * scale;
+    const h = FRAME_H * scale;
+    glassesEl.style.left = `${r.left + box.x + (box.w - w) / 2}px`;
+    glassesEl.style.top = `${r.top + box.y + (box.h - h) / 2}px`;
+    glassesEl.style.width = `${w}px`;
+    glassesEl.style.height = `${h}px`;
   }
 
   // Device pixels the frame will actually cover at full zoom
@@ -201,6 +228,16 @@ const startLanding = () => {
   const setFill = gsap.quickSetter(loaderFill, 'scaleX');
   let lastPct = -1;
 
+  const setL = { x: gsap.quickSetter(halfL, 'x', 'px'), r: gsap.quickSetter(halfL, 'rotation', 'deg') };
+  const setR = { x: gsap.quickSetter(halfR, 'x', 'px'), r: gsap.quickSetter(halfR, 'rotation', 'deg') };
+  const easeSplit = gsap.parseEase('sine.inOut');
+
+  // 0 → 1 → 0: apart by SPLIT_PEAK, back together exactly at 100%
+  function splitAmount(p) {
+    if (reduceMotion) return 0;
+    return p < SPLIT_PEAK ? easeSplit(p / SPLIT_PEAK) : 1 - easeSplit((p - SPLIT_PEAK) / (1 - SPLIT_PEAK));
+  }
+
   function paintLoader() {
     setFill(loadState.v);
     const pct = Math.round(loadState.v * 100);
@@ -209,6 +246,21 @@ const startLanding = () => {
       loaderCount.textContent = String(pct).padStart(3, '0');
       loaderBar.setAttribute('aria-valuenow', pct);
     }
+    const s = splitAmount(loadState.v);
+    const shift = s * SPLIT_SHIFT * (parseFloat(glassesEl.style.width) || 0);
+    setL.x(-shift);
+    setL.r(-s * SPLIT_TILT);
+    setR.x(shift);
+    setR.r(s * SPLIT_TILT);
+  }
+
+  // The assembled glasses appear: dropped in from above (or just faded in)
+  function showGlasses(src) {
+    halfL.src = src;
+    halfR.src = src;
+    placeGlasses();
+    if (reduceMotion) gsap.to(glassesEl, { autoAlpha: 1, duration: 0.4 });
+    else gsap.fromTo(glassesEl, { autoAlpha: 0, y: -0.45 * window.innerHeight }, { autoAlpha: 1, y: 0, duration: 1.1, ease: 'power3.out' });
   }
 
   function loadFrame(dir, i, store) {
@@ -229,39 +281,45 @@ const startLanding = () => {
     });
   }
 
+  // The shown progress chases the real one, but never faster than LOADER_MIN_MS
+  // for the whole story, so a cached visit still sees the split and rejoin.
+  function paceLoader(getReal, t0) {
+    return new Promise((resolve) => {
+      let last = performance.now();
+      const tick = () => {
+        const now = performance.now();
+        const dt = Math.min(0.5, (now - last) / 1000); // seconds, frame-rate independent
+        last = now;
+        const real = getReal();
+        const cap = Math.min(1, (now - t0) / LOADER_MIN_MS);
+        const target = Math.min(real, cap);
+        loadState.v += (target - loadState.v) * (1 - Math.exp(-dt / 0.12));
+        if (target >= 1 && loadState.v > 0.997) loadState.v = 1;
+        paintLoader();
+        if (loadState.v >= 1) {
+          gsap.ticker.remove(tick);
+          resolve();
+        }
+      };
+      gsap.ticker.add(tick);
+    });
+  }
+
   function preload() {
     frameSet = pickFrameSet();
     root.dataset.frames = frameSet === FRAME_SETS.light ? 'light' : 'full';
     const store = { frames, ready };
+    const LAST = FRAME_COUNT - 1; // the assembled glasses
     let count = 0;
-    const jobs = [];
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      jobs.push(
-        loadFrame(frameSet.dir, i, store).then(() => {
-          count++;
-          gsap.to(loadState, {
-            v: count / FRAME_COUNT,
-            duration: 0.6,
-            ease: 'power2.out',
-            overwrite: true,
-            onUpdate: paintLoader,
-          });
-        })
-      );
-    }
-    return Promise.all(jobs).then(
-      () =>
-        new Promise((resolve) => {
-          gsap.to(loadState, {
-            v: 1,
-            duration: 0.45,
-            ease: 'power2.out',
-            overwrite: true,
-            onUpdate: paintLoader,
-            onComplete: resolve,
-          });
-        })
-    );
+    const loadOne = (i) => loadFrame(frameSet.dir, i, store).then(() => count++);
+
+    // The assembled frame first: it is the loader's picture
+    return loadOne(LAST).then(() => {
+      if (ready[LAST]) showGlasses(framePath(frameSet.dir, LAST));
+      const jobs = [];
+      for (let i = 0; i < LAST; i++) jobs.push(loadOne(i));
+      return Promise.all([Promise.all(jobs), paceLoader(() => count / FRAME_COUNT, performance.now())]);
+    });
   }
 
   const fontsReady = document.fonts
@@ -492,11 +550,29 @@ const startLanding = () => {
     const c0 = chapters[0];
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-    tl.to(loaderInner, { autoAlpha: 0, y: -10, duration: 0.55, ease: 'power2.in' })
-      .to(loader, { autoAlpha: 0, duration: 0.9, ease: 'power2.inOut' }, '-=0.05')
-      .to(canvas, { autoAlpha: 1, duration: 1.4, ease: 'power2.out' }, '<')
-      .add(unlockScroll, '<0.5')
-      .to(header, { autoAlpha: 1, duration: 1 }, '<0.1')
+    // Hand-off: the canvas draws the same assembled frame in the same place the
+    // loader's glasses are, the loader fades, then the glasses come apart into
+    // the sequence's first (exploded) frame — where scrolling starts.
+    const handOff = glassesEl && glassesEl.isConnected && ready[FRAME_COUNT - 1];
+    if (handOff) {
+      tl.add(() => {
+        state.frame = FRAME_COUNT - 1;
+        state.zoom = ZOOM_FROM;
+        lastKey = '';
+        render();
+        gsap.set(canvas, { autoAlpha: 1 });
+      })
+        .to(loaderInner, { autoAlpha: 0, y: 8, duration: 0.45, ease: 'power2.in' })
+        .to(loader, { autoAlpha: 0, duration: 0.6, ease: 'power2.inOut' }, '<0.15')
+        .to(state, { frame: 0, duration: reduceMotion ? 0 : BURST_S, ease: 'power2.inOut' }, reduceMotion ? '<' : '>-0.2');
+    } else {
+      tl.to(loaderInner, { autoAlpha: 0, y: -10, duration: 0.55, ease: 'power2.in' })
+        .to(loader, { autoAlpha: 0, duration: 0.9, ease: 'power2.inOut' }, '-=0.05')
+        .to(canvas, { autoAlpha: 1, duration: 1.4, ease: 'power2.out' }, '<');
+    }
+
+    tl.add(unlockScroll, handOff ? '>-0.3' : '<0.5')
+      .to(header, { autoAlpha: 1, duration: 1 }, handOff ? '<' : '<0.1')
       .to(c0.el, { autoAlpha: 1, duration: 0.7, ease: 'power1.out' }, '<0.1')
       .from(c0.words, {
         y: (i, el) => (reduceMotion ? 0 : el.offsetHeight * 1.25),

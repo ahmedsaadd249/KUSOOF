@@ -19,12 +19,40 @@ html.is-loading { overflow: hidden; }
   place-items: center;
   background: var(--bg);
 }
-.loader__inner { width: min(220px, 60vw); }
-.loader__logo { width: 100%; }
+/* The assembled glasses, placed by JS exactly where the canvas will draw them */
+.loader__glasses {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.loader__half {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  /* split at the nose bridge (36% of the frame's width) */
+  transform-origin: 36% 40%;
+  will-change: transform;
+}
+.loader__half--l { clip-path: inset(0 64% 0 0); }
+.loader__half--r { clip-path: inset(0 0 0 36%); }
+/* Bar + counter sit at the bottom so the glasses own the centre */
+.loader__inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(clamp(28px, 7vh, 64px) + env(safe-area-inset-bottom, 0px));
+  width: min(220px, 60vw);
+  margin-inline: auto;
+}
 .loader__bar {
   position: relative;
   height: 1px;
-  margin-top: 30px;
   background: var(--hairline);
   overflow: hidden;
 }

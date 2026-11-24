@@ -28,14 +28,19 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Manrope:wght@400;500;600&family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" />
   <!-- Bump ?v= whenever a stylesheet or script changes so browsers don't serve a stale copy -->
   <link rel="stylesheet" href="css/base.css?v=12" />
-  <link rel="stylesheet" href="css/style.css?v=9" />
+  <link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body id="top">
 
-  <!-- Loader: shown until every frame is decoded -->
+  <!-- Loader: shown until every frame is decoded. The assembled glasses (the
+       sequence's last frame) drop in, split into two halves while loading,
+       rejoin at 100% and hand over to the canvas (js/main.js). -->
   <div class="loader" aria-live="polite">
+    <div class="loader__glasses" aria-hidden="true">
+      <img class="loader__half loader__half--l" alt="" decoding="async" />
+      <img class="loader__half loader__half--r" alt="" decoding="async" />
+    </div>
     <div class="loader__inner">
-      <img class="loader__logo" src="logo/kusoof-logo-transparent.png" width="2071" height="477" alt="KUSOOF" />
       <div class="loader__bar" role="progressbar" data-i18n-attr="aria-label:home.loading" aria-label="Loading the experience" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <span class="loader__fill"></span>
       </div>
@@ -154,6 +159,6 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
   <!-- Modules run in order after parsing: translate + header first, then the scroll animation -->
   <script type="module" src="js/pages/home.js?v=11"></script>
-  <script type="module" src="js/main.js?v=11"></script>
+  <script type="module" src="js/main.js?v=12"></script>
 </body>
 </html>
